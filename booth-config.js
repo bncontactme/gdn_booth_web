@@ -12,7 +12,7 @@ window.BOOTH_CONFIG = {
   // --------------------------------------------------------------------
   //  Entra a https://console.cloudinary.com  ->  arriba a la izquierda
   //  aparece "Cloud name". Copialo y pegalo aqui entre las comillas.
-  cloudName: "",
+  cloudName: "duog120j4",
 
   // --------------------------------------------------------------------
   //  2. TU "UPLOAD PRESET" (sin firma)
@@ -21,7 +21,7 @@ window.BOOTH_CONFIG = {
   //    - Signing Mode:  Unsigned      <-- MUY IMPORTANTE
   //    - Folder:        gdn_booth
   //  Guarda y copia el nombre del preset aqui abajo.
-  uploadPreset: "",
+  uploadPreset: "booth-online",
 
   // --------------------------------------------------------------------
   //  3. MODO SEGURO (opcional, recomendado)

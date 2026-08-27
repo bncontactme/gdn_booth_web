@@ -319,6 +319,15 @@ async function uploadToCloudinary(blob, publicId) {
 
         if (!res.ok) {
             const msg = (data.error && data.error.message) || `HTTP ${res.status}`;
+
+            // El preset tiene overwrite=false. Si un reintento manda una foto
+            // que Cloudinary ya recibio, la rechaza — pero la foto SI esta
+            // arriba, asi que cuenta como exito. Sin esto la cola reintentaria
+            // esa foto para siempre.
+            if (/already exists/i.test(msg)) {
+                const folderPart = CFG.folder ? `${CFG.folder}/` : "";
+                return `https://res.cloudinary.com/${cloudName}/image/upload/${folderPart}${publicId}.jpg`;
+            }
             throw new Error(msg);
         }
         return data.secure_url;

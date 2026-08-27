@@ -71,7 +71,10 @@ html, body {
 .layer-box > img   { object-fit: fill; }
 
 /* En modo editor se ve el contorno de cada capa. */
-#frame.editing .layer-box { outline: 1px dashed rgba(255,255,255,0.35); }
+#frame.editing .layer-box {
+    outline: 1px dashed #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.45);
+}
 #frame.editing .layer-box.selected { outline: 2px solid #00a0ff; }
 #frame.editing { cursor: default; touch-action: none; }
 
@@ -370,13 +373,18 @@ html, body {
 .ed-limit {
     position: absolute;
     inset: 0;
-    border: 2px solid rgba(255,255,255,0.9);
+    border: 2px solid #fff;
+    /* Doble contorno: el oscuro lo hace visible sobre fondos claros. */
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(0,0,0,0.85);
 }
 /* Esquinas tipo visor, para que se lea de un golpe donde corta la foto. */
 .ed-corner {
     position: absolute;
-    width: 26px; height: 26px;
+    width: 28px; height: 28px;
     border: 4px solid #fff;
+    /* difference invierte contra lo que haya detras: sobre fondo blanco
+       salen negras, sobre fondo negro salen blancas. Siempre se ven. */
+    mix-blend-mode: difference;
 }
 .ed-corner.tl { top:0; left:0;  border-right:0; border-bottom:0; }
 .ed-corner.tr { top:0; right:0; border-left:0;  border-bottom:0; }
@@ -390,11 +398,15 @@ html, body {
 .ed-safe {
     position: absolute;
     inset: var(--safe-y, 3.375%) var(--safe-x, 6%);
-    border: 1px dashed rgba(255,255,255,0.55);
+    border: 1px dashed #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(0,0,0,0.55);
 }
 .ed-third {
     position: absolute;
-    background: rgba(255,255,255,0.16);
+    /* difference se invierte solo: negro sobre claro, blanco sobre oscuro. */
+    background: #fff;
+    mix-blend-mode: difference;
+    opacity: 0.35;
 }
 .ed-tv1, .ed-tv2 { top: 0; bottom: 0; width: 1px; }
 .ed-tv1 { left: 33.333%; }
@@ -582,6 +594,10 @@ html, body {
     border-top: 1px solid #808080;
     padding-top: 8px;
 }
+
+/* Al editar se apaga todo lo que queda fuera de la foto. */
+body.editing #stage { background: #141414 !important; }
+body.editing .side-bar { filter: brightness(0.3); }
 
 /* Botones de Formato y Fondo: el elegido se ve hundido. */
 .ed-opts { flex-wrap: wrap; gap: 5px; }

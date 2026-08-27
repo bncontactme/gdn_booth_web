@@ -218,10 +218,12 @@ window.BoothLayers = (function () {
 
         const b = bg();
         const bars = document.querySelectorAll(".side-bar");
+        const stage = document.getElementById("stage");
 
         if (b && b.image) {
             frameEl.style.background = `#000 url("${b.image}") center/cover no-repeat`;
             bars.forEach(el => { el.style.background = "#000"; el.hidden = false; });
+            if (stage) stage.style.background = "#000";
             document.querySelectorAll(".side-bar img").forEach(im => { im.style.display = ""; });
             if (!bgImage || bgImage.dataset.src !== b.image) {
                 bgImage = new Image();
@@ -232,6 +234,7 @@ window.BoothLayers = (function () {
             const color = (b && b.color) || "#000000";
             frameEl.style.background = color;
             bars.forEach(el => { el.style.background = color; });
+            if (stage) stage.style.background = color;
             // Con fondo de color no se ve el logo a los lados: seria un parche.
             document.querySelectorAll(".side-bar img").forEach(im => { im.style.display = "none"; });
             bgImage = null;
@@ -863,6 +866,7 @@ window.BoothLayers = (function () {
         editing = v;
         panelEl.classList.toggle("show", v);
         frameEl.classList.toggle("editing", v);
+        document.body.classList.toggle("editing", v);
         if (guidesEl) guidesEl.hidden = !v;
         if (!v) { selectedId = null; clearSnapLines(); showDistances(null); }
         syncPreview();

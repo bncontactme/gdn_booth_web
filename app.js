@@ -222,6 +222,11 @@ function drawFrame() {
     canvas.height = outH;
     const ctx = canvas.getContext("2d");
 
+    // Sin esto las imagenes que se achican salen con el borde dentado: el
+    // canvas suaviza en calidad "low" por defecto.
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
     // Las medidas del editor se muestran en pixeles de ESTA foto.
     BoothLayers.setPhotoSize(outW, outH);
 

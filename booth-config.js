@@ -73,6 +73,11 @@ window.BOOTH_CONFIG = {
   // Lado largo maximo de la foto en pixeles.
   maxLongEdge: 1920,
 
+  // Margen seguro del editor (F2): el recuadro punteado que marca hasta
+  // donde conviene acercar las cosas a la orilla. 0.06 = 6% de cada lado.
+  // Solo es una guia para acomodar; no recorta la foto.
+  safeMargin: 0.06,
+
   // Efecto espejo: la gente se ve como en un espejo (se siente natural).
   // Ponlo en false si sale texto al reves en las fotos.
   mirror: true,

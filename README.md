@@ -145,6 +145,31 @@ y el resto es diseño.
 | Opacidad y giro | Los dos deslizadores del panel |
 | Ajustar / Llenar / Centrar | Botones de **Encuadre** |
 
+### Guías para acomodar
+
+Al abrir el editor aparecen dos ayudas encima del escenario (**nunca salen
+en la foto**, son solo del editor):
+
+- **Recuadro punteado** — el *margen seguro*. Lo importante (caras, logos,
+  texto) conviene que quede adentro: pegado a la orilla se ve apretado y en
+  algunas pantallas se recorta. Se cambia con `safeMargin` en
+  `booth-config.js` (`0.06` = 6%; `0` lo apaga).
+- **Rejilla de tercios** — las líneas que dividen la pantalla en 9. Poner
+  las caras cerca de los cruces suele verse mejor que centrarlas.
+
+### Alineación automática
+
+Al arrastrar, las capas se **pegan solas** y aparece una **línea magenta**
+mostrando con qué se están alineando. Se pega a:
+
+- el centro de la pantalla (horizontal y vertical),
+- las orillas y el margen seguro,
+- **las orillas y el centro de las otras capas** — así se alinean varios
+  logos entre sí sin andar midiendo.
+
+Basta con acercarse; el resto lo hace solo. Si en algún momento estorba,
+usa las **flechas del teclado**, que mueven sin imán.
+
 **Importante:** usa PNG con fondo transparente para los marcos. Un JPG no
 tiene transparencia y taparía la cámara por completo.
 

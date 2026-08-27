@@ -354,6 +354,53 @@ html, body {
 }
 #editor-open.hidden { display: none; }
 
+/* Guias fijas: margen seguro y tercios. Solo se ven en el editor y nunca
+   salen en la foto (son elementos del DOM, no del canvas). */
+#ed-guides {
+    position: absolute;
+    inset: 0;
+    z-index: 230;
+    pointer-events: none;
+}
+#ed-guides[hidden] { display: none; }
+
+/* Lo importante de la foto debe quedar dentro de este recuadro.
+   Los dos valores son distintos a proposito: en CSS un % vertical se mide
+   contra el alto y uno horizontal contra el ancho, y el escenario es 9:16.
+   Asi el margen se ve parejo por los cuatro lados. */
+.ed-safe {
+    position: absolute;
+    inset: var(--safe-y, 3.375%) var(--safe-x, 6%);
+    border: 1px dashed rgba(255,255,255,0.55);
+}
+.ed-third {
+    position: absolute;
+    background: rgba(255,255,255,0.16);
+}
+.ed-tv1, .ed-tv2 { top: 0; bottom: 0; width: 1px; }
+.ed-tv1 { left: 33.333%; }
+.ed-tv2 { left: 66.666%; }
+.ed-th1, .ed-th2 { left: 0; right: 0; height: 1px; }
+.ed-th1 { top: 33.333%; }
+.ed-th2 { top: 66.666%; }
+
+/* Lineas magenta de alineacion, como en Instagram/Figma: aparecen solo
+   mientras arrastras y desaparecen al soltar. */
+#ed-snaplines {
+    position: absolute;
+    inset: 0;
+    z-index: 245;
+    pointer-events: none;
+}
+#ed-snaplines[hidden] { display: none; }
+.ed-snap {
+    position: absolute;
+    background: #ff2d95;
+    box-shadow: 0 0 4px rgba(255,45,149,0.9);
+}
+.ed-snap.v { top: 0; bottom: 0; width: 1px; }
+.ed-snap.h { left: 0; right: 0; height: 1px; }
+
 /* Recuadro de seleccion con sus 8 manijas. */
 #ed-select {
     position: absolute;

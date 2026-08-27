@@ -18,8 +18,12 @@ window.BoothLayers = (function () {
     // ── Estado ──────────────────────────────────────────────────────────────
 
     const CAMERA_ID = "camera";
-    const SNAP = 0.008;           // iman a orillas y centro (en 0..1)
+    const SNAP_PX = 9;            // que tan cerca hay que estar para que pegue
     const MIN_SIZE = 0.02;
+    // Margen seguro. Se guarda en dos valores porque el escenario es 9:16:
+    // el mismo grosor en pixeles es 6% del ancho pero solo 3.375% del alto.
+    let SAFE_X = 0.06;            // se puede cambiar en booth-config.js
+    let SAFE_Y = 0.06 * 9 / 16;
 
     let layers = [];              // [0] = hasta atras, [n-1] = hasta el frente
     let selectedId = null;
@@ -28,6 +32,8 @@ window.BoothLayers = (function () {
     let hostEl = null;
     let videoEl = null;
     let selectEl = null;
+    let guidesEl = null;
+    let snapEl = null;
     let onChange = () => {};
 
     const nodes = Object.create(null);   // id -> { box, media }
@@ -441,9 +447,55 @@ window.BoothLayers = (function () {
         return Math.abs(dx) <= (l.w * R.width) / 2 && Math.abs(dy) <= (l.h * R.height) / 2;
     }
 
-    function snap(v, targets) {
-        for (const t of targets) if (Math.abs(v - t) < SNAP) return t;
-        return v;
+    // ── Alineacion inteligente (tipo Instagram / Figma) ─────────────────────
+    //
+    // No solo pega a las orillas: tambien al centro, al margen seguro y a las
+    // orillas y al centro de las OTRAS capas. Mientras arrastras aparecen
+    // lineas magenta mostrando con que se esta alineando.
+
+    /** Lugares a los que vale la pena pegarse, en un eje. */
+    function snapTargets(axis, excludeId) {
+        const safe = axis === "x" ? SAFE_X : SAFE_Y;
+        const t = [0, 0.5, 1, safe, 1 - safe];
+        for (const l of layers) {
+            if (l.id === excludeId || !l.visible) continue;
+            const a = axis === "x" ? l.x : l.y;
+            const s = axis === "x" ? l.w : l.h;
+            t.push(a, a + s / 2, a + s);
+        }
+        return t;
+    }
+
+    /**
+     * Busca el mejor iman para un conjunto de bordes que se mueven juntos.
+     * Devuelve cuanto hay que correrse y donde pintar la linea.
+     */
+    function bestSnap(anchors, targets, tol) {
+        let best = null;
+        for (const a of anchors) {
+            for (const t of targets) {
+                const d = t - a;
+                if (Math.abs(d) <= tol && (!best || Math.abs(d) < Math.abs(best.delta))) {
+                    best = { delta: d, at: t };
+                }
+            }
+        }
+        return best;
+    }
+
+    function showSnapLines(xs, ys) {
+        if (!snapEl) return;
+        if (!xs.length && !ys.length) { snapEl.hidden = true; snapEl.innerHTML = ""; return; }
+        snapEl.hidden = false;
+        snapEl.innerHTML =
+            xs.map(v => `<div class="ed-snap v" style="left:${v * 100}%"></div>`).join("") +
+            ys.map(v => `<div class="ed-snap h" style="top:${v * 100}%"></div>`).join("");
+    }
+
+    function clearSnapLines() {
+        if (!snapEl) return;
+        snapEl.hidden = true;
+        snapEl.innerHTML = "";
     }
 
     let drag = null;
@@ -492,11 +544,21 @@ window.BoothLayers = (function () {
         const dx = p.x - drag.start.x;
         const dy = p.y - drag.start.y;
 
+        const tolX = SNAP_PX / p.R.width;
+        const tolY = SNAP_PX / p.R.height;
+        const guidesX = [], guidesY = [];
+
         if (drag.mode === "move") {
             let nx = drag.orig.x + dx;
             let ny = drag.orig.y + dy;
-            nx = snap(nx, [0, 0.5 - l.w / 2, 1 - l.w]);
-            ny = snap(ny, [0, 0.5 - l.h / 2, 1 - l.h]);
+
+            // Se prueban los tres bordes a la vez (izquierda, centro, derecha)
+            // y gana el iman mas cercano.
+            const sx = bestSnap([nx, nx + l.w / 2, nx + l.w], snapTargets("x", l.id), tolX);
+            const sy = bestSnap([ny, ny + l.h / 2, ny + l.h], snapTargets("y", l.id), tolY);
+            if (sx) { nx += sx.delta; guidesX.push(sx.at); }
+            if (sy) { ny += sy.delta; guidesY.push(sy.at); }
+
             l.x = nx; l.y = ny;
         } else {
             const d = drag.dir;
@@ -517,18 +579,43 @@ window.BoothLayers = (function () {
                 if (d.includes("n")) y = o.y + (o.h - h);
             }
 
+            // El borde que se esta jalando tambien se pega, salvo cuando
+            // Shift manda (ahi la proporcion es lo que importa).
+            if (!e.shiftKey) {
+                const tx = snapTargets("x", l.id);
+                const ty = snapTargets("y", l.id);
+
+                if (d.includes("e")) {
+                    const s = bestSnap([x + w], tx, tolX);
+                    if (s) { w += s.delta; guidesX.push(s.at); }
+                } else if (d.includes("w")) {
+                    const s = bestSnap([x], tx, tolX);
+                    if (s) { x += s.delta; w -= s.delta; guidesX.push(s.at); }
+                }
+
+                if (d.includes("s")) {
+                    const s = bestSnap([y + h], ty, tolY);
+                    if (s) { h += s.delta; guidesY.push(s.at); }
+                } else if (d.includes("n")) {
+                    const s = bestSnap([y], ty, tolY);
+                    if (s) { y += s.delta; h -= s.delta; guidesY.push(s.at); }
+                }
+            }
+
             if (w < MIN_SIZE) w = MIN_SIZE;
             if (h < MIN_SIZE) h = MIN_SIZE;
 
             l.x = x; l.y = y; l.w = w; l.h = h;
         }
 
+        showSnapLines(guidesX, guidesY);
         syncPreview();
     }
 
     function onPointerUp(e) {
         if (!drag) return;
         drag = null;
+        clearSnapLines();
         try { frameEl.releasePointerCapture(e.pointerId); } catch { /* ya se solto */ }
         renderPanel();
         save();
@@ -621,7 +708,8 @@ window.BoothLayers = (function () {
         editing = v;
         panelEl.classList.toggle("show", v);
         frameEl.classList.toggle("editing", v);
-        if (!v) selectedId = null;
+        if (guidesEl) guidesEl.hidden = !v;
+        if (!v) { selectedId = null; clearSnapLines(); }
         syncPreview();
         renderPanel();
         onChange();
@@ -634,7 +722,16 @@ window.BoothLayers = (function () {
         hostEl  = opts.hostEl;
         videoEl = opts.videoEl;
         selectEl = opts.selectEl;
+        guidesEl = opts.guidesEl;
+        snapEl = opts.snapEl;
         panelEl = opts.panelEl;
+
+        if (typeof opts.safeMargin === "number") {
+            SAFE_X = Math.max(0, Math.min(0.3, opts.safeMargin));
+            SAFE_Y = SAFE_X * 9 / 16;
+        }
+        frameEl.style.setProperty("--safe-x", (SAFE_X * 100) + "%");
+        frameEl.style.setProperty("--safe-y", (SAFE_Y * 100) + "%");
         listEl  = opts.listEl;
         propsEl = opts.propsEl;
         onChange = opts.onChange || (() => {});

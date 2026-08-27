@@ -20,6 +20,7 @@ const CFG = Object.assign({
     jpegQuality: 0.85,
     maxLongEdge: 1920,
     mirror: true,
+    safeMargin: 0.06,
     qrMessage: "¡Escanea para descargar tu foto!",
 }, window.BOOTH_CONFIG || {});
 
@@ -755,6 +756,9 @@ $("ed-reset").addEventListener("click", () => {
         hostEl:   $("layer-host"),
         videoEl:  video,
         selectEl: $("ed-select"),
+        guidesEl: $("ed-guides"),
+        snapEl:   $("ed-snaplines"),
+        safeMargin: CFG.safeMargin,
         panelEl:  $("editor-panel"),
         listEl:   $("ed-list"),
         propsEl:  $("ed-props"),

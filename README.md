@@ -166,15 +166,26 @@ En **Fondo** se elige lo que va **atrás de todo**: se ve en la pantalla
 cámara no cubre todo — por ejemplo en Perfil, o si achicaste la cámara.
 
 Vienen **GDN**, **Blanco** y **Negro**. Para agregar más, edita
-`backgrounds` en `booth-config.js`:
+`backgrounds` en `booth-config.js`. Cada fondo acepta tres cosas:
 
 ```js
 backgrounds: [
-  { id: "gdn",    name: "GDN",    image: "assets/logo.jpg" },
-  { id: "blanco", name: "Blanco", color: "#ffffff" },
+  // Logo SOLO en las barras de los lados; la foto queda negra.
+  { id: "gdn",    name: "GDN",    color: "#000000", bars: "assets/logo.jpg" },
+
+  // Color liso, en la foto y en los lados.
   { id: "rosa",   name: "Rosa",   color: "#ff2d95" },
+
+  // Imagen que SÍ llena la foto entera (queda atrás de la cámara).
+  { id: "cielo",  name: "Cielo",  image: "assets/cielo.jpg" },
 ],
 ```
+
+| Campo | Dónde se ve |
+|---|---|
+| `color` | Fondo de la **foto** y de los lados |
+| `bars`  | **Solo** las barras de los lados — **no sale en la foto** |
+| `image` | Llena la **foto entera**, atrás de todas las capas |
 
 ### Guías para acomodar
 

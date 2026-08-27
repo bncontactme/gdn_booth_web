@@ -85,10 +85,11 @@ window.BOOTH_CONFIG = {
   //  cuando la camara no cubre toda la pantalla (por ejemplo en Perfil).
   //
   //  Para agregar mas: copia un renglon y cambia los datos.
-  //    color: cualquier color CSS   ->  { id, name, color: "#ff0000" }
-  //    image: una imagen del repo   ->  { id, name, image: "assets/loquesea.jpg" }
+  //    color: el fondo DE LA FOTO (cualquier color CSS)
+  //    bars:  imagen SOLO para las barras de los lados (no sale en la foto)
+  //    image: imagen que SI llena la foto entera (usalo solo si eso quieres)
   backgrounds: [
-    { id: "gdn",    name: "GDN",    image: "assets/logo.jpg" },
+    { id: "gdn",    name: "GDN",    color: "#000000", bars: "assets/logo.jpg" },
     { id: "blanco", name: "Blanco", color: "#ffffff" },
     { id: "negro",  name: "Negro",  color: "#000000" },
   ],

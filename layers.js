@@ -27,7 +27,7 @@ window.BoothLayers = (function () {
         { id: "perfil",   name: "Perfil",   label: "1:1",  w: 1,  h: 1  },
     ];
     const DEFAULT_BACKGROUNDS = [
-        { id: "gdn",    name: "GDN",    image: "assets/logo.jpg" },
+        { id: "gdn",    name: "GDN",    color: "#000000", bars: "assets/logo.jpg" },
         { id: "blanco", name: "Blanco", color: "#ffffff" },
         { id: "negro",  name: "Negro",  color: "#000000" },
     ];
@@ -216,29 +216,37 @@ window.BoothLayers = (function () {
         frameEl.style.setProperty("--safe-x", (SAFE_X * 100) + "%");
         frameEl.style.setProperty("--safe-y", (SAFE_Y * 100) + "%");
 
-        const b = bg();
+        const b = bg() || {};
         const bars = document.querySelectorAll(".side-bar");
+        const barImgs = document.querySelectorAll(".side-bar img");
         const stage = document.getElementById("stage");
+        const color = b.color || "#000000";
 
-        if (b && b.image) {
-            frameEl.style.background = `#000 url("${b.image}") center/cover no-repeat`;
-            bars.forEach(el => { el.style.background = "#000"; el.hidden = false; });
-            if (stage) stage.style.background = "#000";
-            document.querySelectorAll(".side-bar img").forEach(im => { im.style.display = ""; });
+        // ── Fondo DE LA FOTO ───────────────────────────────────────────────
+        // Solo "image" llena la foto. "bars" no: esa vive fuera del encuadre.
+        if (b.image) {
+            frameEl.style.background = `${color} url("${b.image}") center/cover no-repeat`;
             if (!bgImage || bgImage.dataset.src !== b.image) {
                 bgImage = new Image();
                 bgImage.dataset.src = b.image;
                 bgImage.src = b.image;
             }
         } else {
-            const color = (b && b.color) || "#000000";
             frameEl.style.background = color;
-            bars.forEach(el => { el.style.background = color; });
-            if (stage) stage.style.background = color;
-            // Con fondo de color no se ve el logo a los lados: seria un parche.
-            document.querySelectorAll(".side-bar img").forEach(im => { im.style.display = "none"; });
             bgImage = null;
         }
+
+        // ── Barras de los lados (fuera de la foto) ─────────────────────────
+        if (b.bars) {
+            bars.forEach(el => { el.style.background = "#000"; });
+            barImgs.forEach(im => { im.style.display = ""; im.src = b.bars; });
+        } else {
+            bars.forEach(el => { el.style.background = color; });
+            barImgs.forEach(im => { im.style.display = "none"; });
+        }
+
+        // Lo que sobra arriba/abajo del encuadre acompaña a las barras.
+        if (stage) stage.style.background = b.bars ? "#000" : color;
     }
 
     function setFormat(id) {
@@ -781,8 +789,9 @@ window.BoothLayers = (function () {
         }
         if (bgsEl) {
             bgsEl.innerHTML = BACKGROUNDS.map(b => {
-                const swatch = b.image
-                    ? `background-image:url('${b.image}');background-size:cover`
+                const pic = b.bars || b.image;
+                const swatch = pic
+                    ? `background-image:url('${pic}');background-size:cover`
                     : `background:${b.color}`;
                 return `<button class="win95-btn ed-btn ed-opt${b.id === backgroundId ? " on" : ""}" data-bg="${b.id}">
                     <i class="ed-swatch" style="${swatch}"></i>${esc(b.name)}</button>`;

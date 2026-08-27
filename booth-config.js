@@ -21,7 +21,7 @@ window.BOOTH_CONFIG = {
   //    - Signing Mode:  Unsigned      <-- MUY IMPORTANTE
   //    - Folder:        gdn_booth
   //  Guarda y copia el nombre del preset aqui abajo.
-  uploadPreset: "booth-online",
+  uploadPreset: "",
 
   // --------------------------------------------------------------------
   //  3. MODO SEGURO (opcional, recomendado)
@@ -34,7 +34,7 @@ window.BOOTH_CONFIG = {
   //  Instrucciones completas en  worker/README.md
   //
   //  Ejemplo:  "https://gdn-booth-sign.TU-USUARIO.workers.dev"
-  signUrl: "",
+  signUrl: "https://gdn-booth-sign.guadalajaradenoxe.workers.dev",
 
   // --------------------------------------------------------------------
   //  4. AJUSTES (opcional — funcionan bien asi)

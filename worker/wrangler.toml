@@ -4,8 +4,8 @@ compatibility_date = "2024-11-01"
 
 [vars]
 # Estos NO son secretos: aparecen en la subida de todos modos.
-CLOUDINARY_CLOUD_NAME = ""
-CLOUDINARY_API_KEY = ""
+CLOUDINARY_CLOUD_NAME = "duog120j4"
+CLOUDINARY_API_KEY = "933591464786216"
 CLOUDINARY_FOLDER = "gdn_booth"
 
 # El link exacto de tu booth, para que nadie mas pueda pedir firmas.

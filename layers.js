@@ -18,12 +18,34 @@ window.BoothLayers = (function () {
     // ── Estado ──────────────────────────────────────────────────────────────
 
     const CAMERA_ID = "camera";
+
+    // Formatos de la foto. "ar" es ancho/alto: con eso se arma todo, tanto el
+    // escenario en pantalla como el canvas de la foto.
+    const FORMATS = [
+        { id: "story",    name: "Story",    label: "9:16", w: 9,  h: 16 },
+        { id: "completo", name: "Completo", label: "16:9", w: 16, h: 9  },
+        { id: "perfil",   name: "Perfil",   label: "1:1",  w: 1,  h: 1  },
+    ];
+    const DEFAULT_BACKGROUNDS = [
+        { id: "gdn",    name: "GDN",    image: "assets/logo.jpg" },
+        { id: "blanco", name: "Blanco", color: "#ffffff" },
+        { id: "negro",  name: "Negro",  color: "#000000" },
+    ];
+
+    let BACKGROUNDS = DEFAULT_BACKGROUNDS;
+    let formatId = "story";
+    let backgroundId = "gdn";
+    let bgImage = null;          // <img> precargada para pintar el fondo
+
+    const fmt = () => FORMATS.find(f => f.id === formatId) || FORMATS[0];
+    const aspect = () => fmt().w / fmt().h;
+    const bg = () => BACKGROUNDS.find(b => b.id === backgroundId) || BACKGROUNDS[0];
     const SNAP_PX = 9;            // que tan cerca hay que estar para que pegue
     const MIN_SIZE = 0.02;
     // Margen seguro. Se guarda en dos valores porque el escenario es 9:16:
     // el mismo grosor en pixeles es 6% del ancho pero solo 3.375% del alto.
     let SAFE_X = 0.06;            // se puede cambiar en booth-config.js
-    let SAFE_Y = 0.06 * 9 / 16;
+    let SAFE_Y = 0.06 * 9 / 16;   // se recalcula con el formato
 
     let layers = [];              // [0] = hasta atras, [n-1] = hasta el frente
     let selectedId = null;
@@ -83,7 +105,8 @@ window.BoothLayers = (function () {
                 rot: l.rot, opacity: l.opacity, visible: l.visible,
                 blob: l.blob || null, url: l.url || null,
             }));
-            dbRun("readwrite", s => s.put({ version: 1, layers: plain }, KEY))
+            dbRun("readwrite", s => s.put(
+                { version: 2, layers: plain, format: formatId, background: backgroundId }, KEY))
                 .catch(err => console.warn("[Capas] No se pudo guardar:", err));
         }, 300);
     }
@@ -91,7 +114,7 @@ window.BoothLayers = (function () {
     async function load() {
         try {
             const data = await dbRun("readonly", s => s.get(KEY));
-            if (data && Array.isArray(data.layers) && data.layers.length) return data.layers;
+            if (data && Array.isArray(data.layers) && data.layers.length) return data;
         } catch (err) {
             console.warn("[Capas] No se pudo leer lo guardado:", err);
         }
@@ -179,6 +202,77 @@ window.BoothLayers = (function () {
         showDistances(editing ? byId(selectedId) : null);
     }
 
+    /**
+     * Empuja el formato y el fondo al CSS. El escenario, las barras de los
+     * lados y el margen seguro salen todos de la misma proporcion, asi que
+     * cambiar de formato acomoda la pantalla completa de un golpe.
+     */
+    function applyStage() {
+        const ar = aspect();
+        document.documentElement.style.setProperty("--ar", String(ar));
+
+        // Mismo grosor de margen por los cuatro lados, sea cual sea el formato.
+        SAFE_Y = SAFE_X * ar;
+        frameEl.style.setProperty("--safe-x", (SAFE_X * 100) + "%");
+        frameEl.style.setProperty("--safe-y", (SAFE_Y * 100) + "%");
+
+        const b = bg();
+        const bars = document.querySelectorAll(".side-bar");
+
+        if (b && b.image) {
+            frameEl.style.background = `#000 url("${b.image}") center/cover no-repeat`;
+            bars.forEach(el => { el.style.background = "#000"; el.hidden = false; });
+            document.querySelectorAll(".side-bar img").forEach(im => { im.style.display = ""; });
+            if (!bgImage || bgImage.dataset.src !== b.image) {
+                bgImage = new Image();
+                bgImage.dataset.src = b.image;
+                bgImage.src = b.image;
+            }
+        } else {
+            const color = (b && b.color) || "#000000";
+            frameEl.style.background = color;
+            bars.forEach(el => { el.style.background = color; });
+            // Con fondo de color no se ve el logo a los lados: seria un parche.
+            document.querySelectorAll(".side-bar img").forEach(im => { im.style.display = "none"; });
+            bgImage = null;
+        }
+    }
+
+    function setFormat(id) {
+        if (!FORMATS.some(f => f.id === id)) return;
+        formatId = id;
+        applyStage();
+        syncPreview();
+        renderPanel();
+        save();
+        onChange();
+    }
+
+    function setBackground(id) {
+        if (!BACKGROUNDS.some(b => b.id === id)) return;
+        backgroundId = id;
+        applyStage();
+        renderPanel();
+        save();
+        onChange();
+    }
+
+    /** Pinta el fondo en el canvas, igual que se ve en pantalla. */
+    function drawBackground(ctx, W, H) {
+        const b = bg();
+        if (b && b.image) {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, W, H);
+            if (bgImage && bgImage.complete && bgImage.naturalWidth) {
+                const c = coverCrop(bgImage.naturalWidth, bgImage.naturalHeight, W, H);
+                ctx.drawImage(bgImage, c.sx, c.sy, c.sw, c.sh, 0, 0, W, H);
+            }
+        } else {
+            ctx.fillStyle = (b && b.color) || "#000000";
+            ctx.fillRect(0, 0, W, H);
+        }
+    }
+
     // ── Dibujo en el canvas (la foto final) ─────────────────────────────────
 
     /**
@@ -202,6 +296,7 @@ window.BoothLayers = (function () {
      * la misma geometria que la vista previa.
      */
     function drawTo(ctx, W, H, opts) {
+        drawBackground(ctx, W, H);
         const filter = (opts && opts.filter) || "none";
         const mirror = !!(opts && opts.mirror);
         const canFilter = "filter" in ctx;
@@ -277,7 +372,7 @@ window.BoothLayers = (function () {
 
         const size = await loadImageSize(srcFor(l));
         if (size.w && size.h) {
-            const stageAspect = 9 / 16;
+            const stageAspect = aspect();
             const imgAspect = size.w / size.h;
             // Casi del mismo formato que el escenario => marco a pantalla completa.
             if (Math.abs(imgAspect - stageAspect) < 0.04) {
@@ -333,7 +428,7 @@ window.BoothLayers = (function () {
             const sw = l.type === "camera" ? (m && m.videoWidth) : (m && m.naturalWidth);
             const sh = l.type === "camera" ? (m && m.videoHeight) : (m && m.naturalHeight);
             if (sw && sh) {
-                const stageAspect = 9 / 16;
+                const stageAspect = aspect();
                 const a = sw / sh;
                 if (a > stageAspect) { l.w = 1; l.h = stageAspect / a; }
                 else { l.h = 1; l.w = a / stageAspect; }
@@ -506,7 +601,8 @@ window.BoothLayers = (function () {
     // pixeles de la foto final (1080x1920). Si el numero de la izquierda y el
     // de la derecha son iguales, la capa esta centrada — sin adivinar.
 
-    const PHOTO_W = 1080, PHOTO_H = 1920;
+    let PHOTO_W = 1080, PHOTO_H = 1920;
+    const setPhotoSize = (w, h) => { PHOTO_W = w; PHOTO_H = h; };
 
     function showDistances(l) {
         if (!distEl) return;
@@ -667,12 +763,28 @@ window.BoothLayers = (function () {
     // ── Panel ───────────────────────────────────────────────────────────────
 
     let listEl = null, propsEl = null, panelEl = null;
+    let formatsEl = null, bgsEl = null;
 
     const esc = (s) => String(s).replace(/[&<>"']/g, c =>
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
     function renderPanel() {
         if (!listEl) return;
+
+        if (formatsEl) {
+            formatsEl.innerHTML = FORMATS.map(f =>
+                `<button class="win95-btn ed-btn ed-opt${f.id === formatId ? " on" : ""}" data-fmt="${f.id}">
+                    ${f.name}<small>${f.label}</small></button>`).join("");
+        }
+        if (bgsEl) {
+            bgsEl.innerHTML = BACKGROUNDS.map(b => {
+                const swatch = b.image
+                    ? `background-image:url('${b.image}');background-size:cover`
+                    : `background:${b.color}`;
+                return `<button class="win95-btn ed-btn ed-opt${b.id === backgroundId ? " on" : ""}" data-bg="${b.id}">
+                    <i class="ed-swatch" style="${swatch}"></i>${esc(b.name)}</button>`;
+            }).join("");
+        }
 
         // Arriba en la lista = adelante en la pantalla (como OBS).
         const rows = layers.slice().reverse().map(l => `
@@ -770,19 +882,30 @@ window.BoothLayers = (function () {
         distEl = opts.distEl;
         panelEl = opts.panelEl;
 
-        if (typeof opts.safeMargin === "number") {
-            SAFE_X = Math.max(0, Math.min(0.3, opts.safeMargin));
-            SAFE_Y = SAFE_X * 9 / 16;
-        }
-        frameEl.style.setProperty("--safe-x", (SAFE_X * 100) + "%");
-        frameEl.style.setProperty("--safe-y", (SAFE_Y * 100) + "%");
         listEl  = opts.listEl;
         propsEl = opts.propsEl;
+        formatsEl = opts.formatsEl;
+        bgsEl = opts.bgsEl;
         onChange = opts.onChange || (() => {});
 
+        if (typeof opts.safeMargin === "number") {
+            SAFE_X = Math.max(0, Math.min(0.3, opts.safeMargin));
+        }
+        if (Array.isArray(opts.backgrounds) && opts.backgrounds.length) {
+            BACKGROUNDS = opts.backgrounds;
+        }
+
+        // Lo guardado manda; si no hay nada, se usa lo de booth-config.js.
         const saved = await load();
-        layers = saved || [defaultCamera()];
+        layers = (saved && saved.layers) || [defaultCamera()];
         ensureCamera();
+
+        formatId = (saved && saved.format) || opts.format || "story";
+        backgroundId = (saved && saved.background) || opts.background || BACKGROUNDS[0].id;
+        if (!FORMATS.some(f => f.id === formatId)) formatId = "story";
+        if (!BACKGROUNDS.some(b => b.id === backgroundId)) backgroundId = BACKGROUNDS[0].id;
+
+        applyStage();
 
         // La capa de camara reutiliza el <video> que ya existe en la pagina:
         // syncPreview lo mete dentro de su caja (appendChild lo mueve).
@@ -794,6 +917,14 @@ window.BoothLayers = (function () {
         frameEl.addEventListener("pointerup", onPointerUp);
         frameEl.addEventListener("pointercancel", onPointerUp);
         listEl.addEventListener("click", onListClick);
+        if (formatsEl) formatsEl.addEventListener("click", (e) => {
+            const b = e.target.closest("[data-fmt]");
+            if (b) setFormat(b.dataset.fmt);
+        });
+        if (bgsEl) bgsEl.addEventListener("click", (e) => {
+            const b = e.target.closest("[data-bg]");
+            if (b) setBackground(b.dataset.bg);
+        });
         document.addEventListener("keydown", onKey);
     }
 
@@ -808,6 +939,11 @@ window.BoothLayers = (function () {
         reset,
         cameraLayer,
         setEditing,
+        setFormat,
+        setBackground,
+        aspect,
+        format: () => formatId,
+        setPhotoSize,
         isEditing: () => editing,
         count: () => layers.length,
         imageCount: () => layers.filter(l => l.type === "image").length,

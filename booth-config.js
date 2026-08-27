@@ -78,6 +78,27 @@ window.BOOTH_CONFIG = {
   // Solo es una guia para acomodar; no recorta la foto.
   safeMargin: 0.06,
 
+  // --------------------------------------------------------------------
+  //  FONDOS (se eligen en el editor, F2 -> Fondo)
+  // --------------------------------------------------------------------
+  //  El fondo se ve atras de todas las capas y TAMBIEN sale en la foto
+  //  cuando la camara no cubre toda la pantalla (por ejemplo en Perfil).
+  //
+  //  Para agregar mas: copia un renglon y cambia los datos.
+  //    color: cualquier color CSS   ->  { id, name, color: "#ff0000" }
+  //    image: una imagen del repo   ->  { id, name, image: "assets/loquesea.jpg" }
+  backgrounds: [
+    { id: "gdn",    name: "GDN",    image: "assets/logo.jpg" },
+    { id: "blanco", name: "Blanco", color: "#ffffff" },
+    { id: "negro",  name: "Negro",  color: "#000000" },
+  ],
+
+  // Fondo con el que arranca la primera vez.
+  background: "gdn",
+
+  // Formato con el que arranca: "story" (9:16), "completo" (16:9) o "perfil" (1:1).
+  format: "story",
+
   // Efecto espejo: la gente se ve como en un espejo (se siente natural).
   // Ponlo en false si sale texto al reves en las fotos.
   mirror: true,

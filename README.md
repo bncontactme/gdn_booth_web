@@ -145,6 +145,37 @@ y el resto es diseño.
 | Opacidad y giro | Los dos deslizadores del panel |
 | Ajustar / Llenar / Centrar | Botones de **Encuadre** |
 
+### Formato de la foto
+
+En el panel, **Formato de la foto**:
+
+| Formato | Sale | Para qué |
+|---|---|---|
+| **Story** | 1080×1920 (9:16) | Vertical, para historias. El de siempre. |
+| **Completo** | 1920×1080 (16:9) | Horizontal: **llena la pantalla** del evento, sin barras a los lados. |
+| **Perfil** | 1920×1920 (1:1) | Cuadrado, tipo foto de perfil. |
+
+Cambiar de formato reacomoda la pantalla y la foto al instante. Las capas
+conservan su posición en proporción, así que conviene darles una revisada
+después de cambiar.
+
+### Fondo
+
+En **Fondo** se elige lo que va **atrás de todo**: se ve en la pantalla
+(incluidas las barras de los lados) y **también sale en la foto** cuando la
+cámara no cubre todo — por ejemplo en Perfil, o si achicaste la cámara.
+
+Vienen **GDN**, **Blanco** y **Negro**. Para agregar más, edita
+`backgrounds` en `booth-config.js`:
+
+```js
+backgrounds: [
+  { id: "gdn",    name: "GDN",    image: "assets/logo.jpg" },
+  { id: "blanco", name: "Blanco", color: "#ffffff" },
+  { id: "rosa",   name: "Rosa",   color: "#ff2d95" },
+],
+```
+
 ### Guías para acomodar
 
 Al abrir el editor aparecen dos ayudas encima del escenario (**nunca salen

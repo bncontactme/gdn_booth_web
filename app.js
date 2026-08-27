@@ -21,6 +21,9 @@ const CFG = Object.assign({
     maxLongEdge: 1920,
     mirror: true,
     safeMargin: 0.06,
+    backgrounds: null,
+    background: "gdn",
+    format: "story",
     qrMessage: "¡Escanea para descargar tu foto!",
 }, window.BOOTH_CONFIG || {});
 
@@ -209,16 +212,18 @@ function drawFrame() {
     // tomar. Si la escondieron a proposito, se puede capturar solo el montaje.
     if (cam.visible && !camReady) return null;
 
-    const outH = Math.max(320, Math.round(CFG.maxLongEdge));
-    const outW = Math.round(outH * 9 / 16);
+    // El lado LARGO manda, sea alto (Story) o ancho (Completo).
+    const ar = BoothLayers.aspect();
+    const long = Math.max(320, Math.round(CFG.maxLongEdge));
+    const outW = ar >= 1 ? long : Math.round(long * ar);
+    const outH = ar >= 1 ? Math.round(long / ar) : long;
 
     canvas.width = outW;
     canvas.height = outH;
     const ctx = canvas.getContext("2d");
 
-    // Fondo negro: lo que ninguna capa cubra no debe salir transparente.
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, outW, outH);
+    // Las medidas del editor se muestran en pixeles de ESTA foto.
+    BoothLayers.setPhotoSize(outW, outH);
 
     const scene = SCENES[sceneIndex];
 
@@ -760,6 +765,11 @@ $("ed-reset").addEventListener("click", () => {
         snapEl:   $("ed-snaplines"),
         distEl:   $("ed-dist"),
         safeMargin: CFG.safeMargin,
+        backgrounds: CFG.backgrounds,
+        background: CFG.background,
+        format: CFG.format,
+        formatsEl: $("ed-formats"),
+        bgsEl:     $("ed-backgrounds"),
         panelEl:  $("editor-panel"),
         listEl:   $("ed-list"),
         propsEl:  $("ed-props"),

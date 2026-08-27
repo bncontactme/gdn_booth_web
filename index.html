@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Camara.exe</title>
+<link rel="icon" href="assets/logo.jpg">
+<link rel="apple-touch-icon" href="assets/logo.jpg">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Escenario: video vertical 9:16 centrado -->
+<div id="stage">
+    <div id="frame">
+        <video id="video" autoplay playsinline muted></video>
+        <div id="vignette"></div>
+        <div id="grain"></div>
+    </div>
+</div>
+
+<!-- Barras laterales con el logo -->
+<div class="side-bar left"><img src="assets/logo.jpg" alt="Guadalajara De Noche"></div>
+<div class="side-bar right"><img src="assets/logo.jpg" alt="Guadalajara De Noche"></div>
+
+<!-- Lienzo de captura (nunca se ve) -->
+<canvas id="canvas" hidden></canvas>
+
+<!-- Cuenta regresiva y flash -->
+<div id="countdown-overlay"><span id="countdown-number"></span></div>
+<div id="flash"></div>
+
+<!-- Subiendo -->
+<div class="overlay" id="uploading-overlay">
+    <div class="spinner"></div>
+    <div id="uploading-text">Subiendo tu foto…</div>
+</div>
+
+<!-- Codigo QR -->
+<div class="overlay" id="qr-overlay">
+    <img id="qr-image" alt="Codigo QR">
+    <div id="qr-message"></div>
+    <div id="qr-hint"></div>
+</div>
+
+<!-- Respaldo sin internet: se muestra la foto en pantalla -->
+<div class="overlay" id="fallback-overlay">
+    <img id="fallback-photo" alt="Tu foto">
+    <div id="fallback-message"></div>
+</div>
+
+<!-- Cambio de escena -->
+<div class="overlay" id="scene-overlay">
+    <div class="win95-dialog">
+        <div class="win95-dialog-titlebar">Camara.exe</div>
+        <div class="win95-dialog-body">
+            Cambiando escena…<br><br>
+            <span id="scene-name"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Insignia de estado -->
+<div id="health-badge"><span class="dot"></span><span id="health-badge-text"></span></div>
+
+<!-- Panel de diagnostico (F1) -->
+<div class="overlay" id="health-panel">
+    <div class="win95-dialog">
+        <div class="win95-dialog-titlebar">Estado del Photo Booth</div>
+        <div class="win95-dialog-body" id="health-body"></div>
+        <div class="win95-dialog-footer">
+            <button class="win95-btn" id="health-close">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Boton principal -->
+<div id="button-container">
+    <button class="win95-btn" id="capture">Presiona Enter Para Tomar Foto</button>
+</div>
+
+<script src="booth-config.js"></script>
+<script src="scenes.js"></script>
+<script src="vendor/qrcode.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

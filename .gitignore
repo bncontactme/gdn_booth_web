@@ -1,0 +1,11 @@
+.DS_Store
+**/.DS_Store
+Thumbs.db
+node_modules/
+*.log
+
+# Nunca subir claves reales
+.env
+.env.*
+*.pem
+*.key

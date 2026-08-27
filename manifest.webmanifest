@@ -1,0 +1,13 @@
+{
+  "name": "Guadalajara De Noche — Photo Booth",
+  "short_name": "Photo Booth",
+  "start_url": ".",
+  "scope": ".",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "assets/logo.jpg", "sizes": "512x512", "type": "image/jpeg" }
+  ]
+}

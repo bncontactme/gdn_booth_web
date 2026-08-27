@@ -15,7 +15,7 @@ cámara  ->  cuenta regresiva  ->  foto  ->  Cloudinary  ->  código QR
 
 1. Abrir el link del booth.
 2. Cuando el navegador pregunte por la cámara, darle **Permitir**.
-3. Presionar **Enter** (o tocar la pantalla) para tomar la foto.
+3. Presionar **Enter** o el botón **Presiona Enter Para Tomar Foto**.
 4. Escanear el QR que aparece.
 
 Eso es todo. No se instala nada.
@@ -24,7 +24,7 @@ Eso es todo. No se instala nada.
 
 | Tecla | Qué hace |
 |---|---|
-| **Enter** | Toma la foto |
+| **Enter** | Toma la foto (o el botón de abajo) |
 | **5 Enter rápidos** | Cambia de escena (el "look" de la foto) |
 | **F2** | Abre el editor de capas (o el botón **⚙ Escena**, arriba a la derecha) |
 | **F1** | Muestra el estado del booth y cómo arreglar lo que falle |

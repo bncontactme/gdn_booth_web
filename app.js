@@ -667,13 +667,9 @@ document.addEventListener("keydown", (e) => {
     startCountdown();
 });
 
-// Tocar la pantalla tambien toma la foto (tablets y telefonos).
-frameEl.addEventListener("click", () => {
-    if (healthPanel.classList.contains("show")) return;
-    if (lockOverlay.classList.contains("show")) return;
-    if (BoothLayers.isEditing()) return;
-    startCountdown();
-});
+// A proposito NO se dispara la foto al tocar el escenario: durante el evento
+// la gente se acerca a acomodarse y lo tocaba sin querer. La foto se toma
+// solo con el boton o con Enter.
 
 window.addEventListener("online", () => { checkHealth(); processQueue(); });
 window.addEventListener("offline", checkHealth);

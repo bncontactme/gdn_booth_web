@@ -52,7 +52,7 @@ window.BOOTH_CONFIG = {
   //  worker/wrangler.toml (BOOTH_PIN) y vuelve a publicar el worker.
   //
   //  Cambialo antes de cada evento. Dejalo vacio ("") para no pedir nada.
-  pin: "2026",
+  pin: "GDN2026",
 
   // --------------------------------------------------------------------
   //  5. AJUSTES (opcional — funcionan bien asi)

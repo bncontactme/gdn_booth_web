@@ -82,6 +82,15 @@ Listo. Presiona **F1** en el booth: debe decir
 
 ---
 
+## PIN extra (opcional)
+
+Si `booth-config.js` tiene `pin` lleno, la página pide ese PIN antes de
+prender la cámara. Para que el worker también lo exija (y no solo la
+página), pon el mismo valor en `BOOTH_PIN` dentro de `wrangler.toml` y
+vuelve a correr `npx wrangler deploy`. Así, aunque alguien se salte la
+pantalla de la página desde las herramientas del navegador, el worker
+igual rechaza la firma sin el PIN correcto.
+
 ## Qué protege y qué no
 
 | | Preset sin firma | Con este worker |

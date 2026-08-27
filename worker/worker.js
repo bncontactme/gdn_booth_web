@@ -15,6 +15,9 @@
  *   CLOUDINARY_API_SECRET    SECRETA  -> se guarda con `wrangler secret put`
  *   CLOUDINARY_FOLDER        opcional (por defecto gdn_booth)
  *   ALLOWED_ORIGIN           el link del booth, para que nadie mas lo use
+ *   BOOTH_PIN                opcional. Si se llena, el mismo PIN que pide
+ *                            la pagina (booth-config.js: pin) tiene que
+ *                            llegar en cada peticion o no se firma nada.
  */
 
 const DEFAULT_FOLDER = "gdn_booth";
@@ -70,6 +73,10 @@ export default {
 
         let body = {};
         try { body = await request.json(); } catch { /* cuerpo vacio */ }
+
+        if (env.BOOTH_PIN && String(body.pin || "") !== env.BOOTH_PIN) {
+            return json({ error: "PIN invalido" }, 403, cors);
+        }
 
         const publicId = String(body.publicId || "");
         if (!PUBLIC_ID_RE.test(publicId)) {

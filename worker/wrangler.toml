@@ -11,5 +11,10 @@ CLOUDINARY_FOLDER = "gdn_booth"
 # El link exacto de tu booth, para que nadie mas pueda pedir firmas.
 ALLOWED_ORIGIN = "https://bncontactme.github.io"
 
+# Mismo PIN que "pin" en booth-config.js. Tampoco es secreto (ya esta a la
+# vista en esa pagina) — es un candado extra para que el worker no firme
+# nada aunque alguien intente pedirle una firma sin pasar por la pagina.
+BOOTH_PIN = "2026"
+
 # CLOUDINARY_API_SECRET NO va aqui. Se guarda aparte con:
 #   npx wrangler secret put CLOUDINARY_API_SECRET

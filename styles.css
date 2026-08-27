@@ -299,6 +299,32 @@ html, body {
 }
 .health-facts div { margin-bottom: 3px; }
 
+/* ── Candado (PIN) ─────────────────────────────────────────────────────── */
+
+#lock-overlay { z-index: 800; }
+.win95-input {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 20px;
+    text-align: center;
+    letter-spacing: 6px;
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    background: #fff;
+    color: #000;
+}
+#lock-error {
+    margin-top: 10px;
+    min-height: 16px;
+    color: #a00000;
+    font-weight: bold;
+}
+
 /* Insignia de estado — solo aparece cuando algo esta mal. */
 #health-badge {
     position: fixed;

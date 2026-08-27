@@ -13,6 +13,7 @@ const CFG = Object.assign({
     cloudName: "",
     uploadPreset: "",
     signUrl: "",
+    pin: "",
     folder: "gdn_booth",
     countdownSeconds: 3,
     qrSeconds: 18,
@@ -59,8 +60,13 @@ const healthBody = $("health-body");
 const healthBadge = $("health-badge");
 const healthBadgeText = $("health-badge-text");
 const healthCloseBtn = $("health-close");
+const lockOverlay = $("lock-overlay");
+const lockInput = $("lock-input");
+const lockError = $("lock-error");
+const lockSubmitBtn = $("lock-submit");
 
 let currentStream = null;
+let sessionPin = "";
 let sceneIndex = 0;
 let busy = false;              // countdown / capture / upload in progress
 let cameraError = null;
@@ -276,7 +282,7 @@ async function fetchSignature(publicId, signal) {
     const res = await fetch(CFG.signUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ publicId }),
+        body: JSON.stringify({ publicId, pin: sessionPin }),
         signal,
     });
     const data = await res.json().catch(() => ({}));
@@ -612,6 +618,7 @@ async function checkHealth() {
 
 captureBtn.addEventListener("click", () => {
     if (healthPanel.classList.contains("show")) return;
+    if (lockOverlay.classList.contains("show")) return;
     startCountdown();
 });
 
@@ -627,6 +634,7 @@ document.addEventListener("keydown", (e) => {
     }
     if (e.key === "Escape") { hide(healthPanel); return; }
     if (healthPanel.classList.contains("show")) return;
+    if (lockOverlay.classList.contains("show")) return;
 
     if (e.key !== "Enter") return;
     e.preventDefault();
@@ -649,17 +657,59 @@ document.addEventListener("keydown", (e) => {
 // Tocar la pantalla tambien toma la foto (tablets y telefonos).
 frameEl.addEventListener("click", () => {
     if (healthPanel.classList.contains("show")) return;
+    if (lockOverlay.classList.contains("show")) return;
     startCountdown();
 });
 
 window.addEventListener("online", () => { checkHealth(); processQueue(); });
 window.addEventListener("offline", checkHealth);
 
+// ── Candado (PIN) ───────────────────────────────────────────────────────────
+
+function unlockBooth(pin) {
+    sessionPin = pin;
+    try { sessionStorage.setItem("gdn_booth_pin", pin); } catch { /* modo privado */ }
+    hide(lockOverlay);
+    lockError.textContent = "";
+    initCamera();
+    checkHealth();
+}
+
+function attemptUnlock() {
+    const value = lockInput.value.trim();
+    if (value && value === CFG.pin) {
+        unlockBooth(value);
+    } else {
+        lockError.textContent = "PIN incorrecto.";
+        lockInput.value = "";
+        lockInput.focus();
+    }
+}
+
+lockSubmitBtn.addEventListener("click", attemptUnlock);
+lockInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); attemptUnlock(); }
+});
+
 // ── Arranque ────────────────────────────────────────────────────────────────
 
 applyScene();
-initCamera();
-checkHealth();
+
+if (!CFG.pin) {
+    // Sin PIN configurado: arranca directo, como antes.
+    initCamera();
+    checkHealth();
+} else {
+    let remembered = "";
+    try { remembered = sessionStorage.getItem("gdn_booth_pin") || ""; } catch { /* modo privado */ }
+
+    if (remembered === CFG.pin) {
+        unlockBooth(remembered);
+    } else {
+        show(lockOverlay);
+        lockInput.focus();
+    }
+}
 
 setInterval(processQueue, RETRY_INTERVAL);
 setTimeout(processQueue, 3000);

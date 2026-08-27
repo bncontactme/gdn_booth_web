@@ -37,7 +37,25 @@ window.BOOTH_CONFIG = {
   signUrl: "https://gdn-booth-sign.guadalajaradenoxe.workers.dev",
 
   // --------------------------------------------------------------------
-  //  4. AJUSTES (opcional — funcionan bien asi)
+  //  4. CANDADO (opcional, recomendado)
+  // --------------------------------------------------------------------
+  //  Pide un PIN antes de dejar prender la camara. No es un secreto real
+  //  (esta pagina es publica), pero evita que cualquiera que llegue al
+  //  link se ponga a usar el booth sin que tu se lo digas.
+  //
+  //  Si tienes el "modo seguro" (signUrl arriba) prendido, el worker
+  //  TAMBIEN revisa este PIN antes de firmar cualquier foto — asi que
+  //  aunque alguien se salte esta pantalla desde las herramientas del
+  //  navegador, el worker igual le va a decir que no.
+  //
+  //  Para que el worker lo revise, pon el MISMO valor en
+  //  worker/wrangler.toml (BOOTH_PIN) y vuelve a publicar el worker.
+  //
+  //  Cambialo antes de cada evento. Dejalo vacio ("") para no pedir nada.
+  pin: "2026",
+
+  // --------------------------------------------------------------------
+  //  5. AJUSTES (opcional — funcionan bien asi)
   // --------------------------------------------------------------------
 
   // Carpeta dentro de Cloudinary. Debe ser LA MISMA que pusiste en el preset.

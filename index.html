@@ -65,6 +65,21 @@
     </div>
 </div>
 
+<!-- Candado: pide un PIN antes de dejar usar el booth -->
+<div class="overlay" id="lock-overlay">
+    <div class="win95-dialog">
+        <div class="win95-dialog-titlebar">Camara.exe — Bloqueado</div>
+        <div class="win95-dialog-body">
+            Pide el PIN a quien esta a cargo del evento.
+            <input type="password" id="lock-input" class="win95-input" inputmode="numeric" autocomplete="off" placeholder="PIN">
+            <div id="lock-error"></div>
+        </div>
+        <div class="win95-dialog-footer">
+            <button class="win95-btn" id="lock-submit">Entrar</button>
+        </div>
+    </div>
+</div>
+
 <!-- Insignia de estado -->
 <div id="health-badge"><span class="dot"></span><span id="health-badge-text"></span></div>
 

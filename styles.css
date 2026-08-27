@@ -37,8 +37,8 @@ html, body {
    Todo el escenario sale de ahi, asi que cambiar de formato reacomoda solo. */
 /* Espacio que ocupa el marco Win95 alrededor de la foto. */
 :root {
-    --gap: 14px;        /* lados y abajo */
-    --gap-top: 38px;    /* arriba cabe la barra de titulo */
+    --gap: 9px;         /* lados y abajo */
+    --gap-top: 30px;    /* arriba cabe la barra de titulo */
 }
 
 #frame-wrap {
@@ -51,17 +51,20 @@ html, body {
 
 /* Lo que el marco le come a la pantalla, por eje. */
 :root {
-    --chrome-x: calc(var(--gap) * 2 + 22px);
-    --chrome-y: calc(var(--gap-top) + var(--gap) + 22px);
+    --chrome-x: calc(var(--gap) * 2 + 12px);
+    --chrome-y: calc(var(--gap-top) + var(--gap) + 12px);
 }
 
 #frame {
     position: relative;
     z-index: 1;
-    height: calc(100vh - var(--chrome-y));
-    width: calc((100vh - var(--chrome-y)) * var(--ar, 0.5625));
-    max-width: calc(100vw - var(--chrome-x));
-    max-height: calc((100vw - var(--chrome-x)) / var(--ar, 0.5625));
+    /* Se toma el alto que quepa por los DOS lados y el ancho lo saca
+       aspect-ratio: asi la proporcion es exacta y la foto nunca se recorta. */
+    height: min(
+        calc(100vh - var(--chrome-y)),
+        calc((100vw - var(--chrome-x)) / var(--ar, 0.5625))
+    );
+    aspect-ratio: var(--ar, 0.5625);
     overflow: hidden;
     background: #000;
 }
@@ -103,14 +106,14 @@ html, body {
 .pf-title {
     position: absolute;
     top: 4px; left: 4px; right: 4px;
-    height: calc(var(--gap-top) - 14px);
+    height: calc(var(--gap-top) - 12px);
     background: #000080;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 5px;
-    font-size: 13px;
+    padding: 0 4px;
+    font-size: 11px;
     font-weight: bold;
     overflow: hidden;
     line-height: 1;   /* #frame-wrap lo pone en 0 y colapsaba el texto */
@@ -123,7 +126,7 @@ html, body {
     font-style: normal;
     font-size: 10px;
     line-height: 1;
-    width: 17px; height: 15px;
+    width: 15px; height: 13px;
     display: flex; align-items: center; justify-content: center;
     border-top: 2px solid #fff; border-left: 2px solid #fff;
     border-right: 2px solid #808080; border-bottom: 2px solid #808080;

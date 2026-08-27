@@ -15,8 +15,16 @@
 </head>
 <body>
 
-<!-- Escenario: video vertical 9:16 centrado -->
+<!-- Escenario: el encuadre de la foto, centrado -->
 <div id="stage">
+  <div id="frame-wrap">
+    <!-- Marco visible: va POR FUERA del encuadre, nunca encima de la foto.
+         Solo marca donde queda el cuadro para quien se esta tomando la foto. -->
+    <div id="photo-frame" aria-hidden="true">
+        <span class="pf-c tl"></span><span class="pf-c tr"></span>
+        <span class="pf-c bl"></span><span class="pf-c br"></span>
+    </div>
+
     <div id="frame">
         <!-- Aqui viven las capas: la camara y las imagenes que cargues. -->
         <div id="layer-host">
@@ -51,6 +59,7 @@
         <div id="vignette"></div>
         <div id="grain"></div>
     </div>
+  </div>
 </div>
 
 <!-- Barras laterales con el logo -->

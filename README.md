@@ -145,6 +145,14 @@ y el resto es diseño.
 | Opacidad y giro | Los dos deslizadores del panel |
 | Ajustar / Llenar / Centrar | Botones de **Encuadre** |
 
+### El marco que se ve en pantalla
+
+Alrededor del encuadre hay un **marco con esquinas tipo visor**. Está
+**siempre visible** (no solo al editar) y vive **por fuera** de la foto: no
+tapa nada, solo le dice a la gente *hasta aquí sale en la foto*.
+
+Se apaga con `showPhotoFrame: false` en `booth-config.js`.
+
 ### Formato de la foto
 
 En el panel, **Formato de la foto**:

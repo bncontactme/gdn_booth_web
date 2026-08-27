@@ -35,15 +35,54 @@ html, body {
 /* Marco vertical 9:16 centrado, tan alto como quepa. */
 /* --ar es ancho/alto del formato elegido (9:16 = 0.5625, 16:9 = 1.777, 1:1 = 1).
    Todo el escenario sale de ahi, asi que cambiar de formato reacomoda solo. */
+/* --gap es el aire que queda entre la foto y el marco visible. */
+:root { --gap: 14px; }
+
+#frame-wrap {
+    position: relative;
+    line-height: 0;
+}
+
 #frame {
     position: relative;
-    height: 100vh;
-    width: calc(100vh * var(--ar, 0.5625));
-    max-width: 100vw;
-    max-height: calc(100vw / var(--ar, 0.5625));
+    height: calc(100vh - var(--gap) * 4);
+    width: calc((100vh - var(--gap) * 4) * var(--ar, 0.5625));
+    max-width: calc(100vw - var(--gap) * 4);
+    max-height: calc((100vw - var(--gap) * 4) / var(--ar, 0.5625));
     overflow: hidden;
     background: #000;
 }
+
+/* ── Marco visible del encuadre ────────────────────────────────────────
+   Se ve siempre (no solo al editar) y vive FUERA de la foto: marca donde
+   corta la imagen sin taparle nada a nadie. */
+
+#photo-frame {
+    position: absolute;
+    inset: calc(var(--gap) * -1);
+    pointer-events: none;
+    border: 2px solid rgba(255,255,255,0.30);
+    border-radius: 4px;
+    z-index: 3;
+    /* Contorno oscuro para que tambien se vea sobre fondos claros. */
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(0,0,0,0.5);
+}
+#photo-frame.hidden { display: none; }
+
+/* Esquinas tipo visor: lo que de verdad lee la gente. */
+.pf-c {
+    position: absolute;
+    width: 46px; height: 46px;
+    border: 5px solid #fff;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.85));
+}
+.pf-c.tl { top:-3px; left:-3px;  border-right:0; border-bottom:0; border-radius: 4px 0 0 0; }
+.pf-c.tr { top:-3px; right:-3px; border-left:0;  border-bottom:0; border-radius: 0 4px 0 0; }
+.pf-c.bl { bottom:-3px; left:-3px;  border-right:0; border-top:0; border-radius: 0 0 0 4px; }
+.pf-c.br { bottom:-3px; right:-3px; border-left:0; border-top:0; border-radius: 0 0 4px 0; }
+
+/* Mientras se edita estorba: ahi mandan las guias del editor. */
+body.editing #photo-frame { opacity: 0.25; }
 
 /* ── Capas (tipo OBS) ──────────────────────────────────────────────────── */
 
@@ -110,7 +149,10 @@ html, body {
     position: fixed;
     top: 0;
     height: 100vh;
-    width: max(0px, calc((100vw - min(100vw, 100vh * var(--ar, 0.5625))) / 2));
+    width: max(0px, calc((100vw - min(
+        calc(100vw - var(--gap) * 4),
+        calc((100vh - var(--gap) * 4) * var(--ar, 0.5625))
+    )) / 2));
     background: #000;
     display: flex;
     align-items: center;

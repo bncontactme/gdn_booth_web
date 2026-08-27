@@ -97,6 +97,11 @@ window.BOOTH_CONFIG = {
   // Fondo con el que arranca la primera vez.
   background: "gdn",
 
+  // Marco visible alrededor del encuadre (las esquinas tipo visor).
+  // Va por fuera de la foto: marca el cuadro sin taparle nada.
+  // Ponlo en false si no lo quieres.
+  showPhotoFrame: true,
+
   // Formato con el que arranca: "story" (9:16), "completo" (16:9) o "perfil" (1:1).
   format: "story",
 

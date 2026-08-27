@@ -24,6 +24,7 @@ const CFG = Object.assign({
     backgrounds: null,
     background: "gdn",
     format: "story",
+    showPhotoFrame: true,
     qrMessage: "¡Escanea para descargar tu foto!",
 }, window.BOOTH_CONFIG || {});
 
@@ -759,6 +760,8 @@ $("ed-reset").addEventListener("click", () => {
 });
 
 // ── Arranque ────────────────────────────────────────────────────────────────
+
+if (CFG.showPhotoFrame === false) $("photo-frame").classList.add("hidden");
 
 (async function boot() {
     await BoothLayers.init({

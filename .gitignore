@@ -13,3 +13,6 @@ node_modules/
 # Cloudflare
 worker/.wrangler/
 .dev.vars
+
+# Config local de herramientas
+.claude/

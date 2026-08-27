@@ -26,6 +26,7 @@ Eso es todo. No se instala nada.
 |---|---|
 | **Enter** | Toma la foto |
 | **5 Enter rápidos** | Cambia de escena (el "look" de la foto) |
+| **F2** | Abre el editor de capas (marcos, logos, tamaño de la cámara) |
 | **F1** | Muestra el estado del booth y cómo arreglar lo que falle |
 | **F11** | Pantalla completa (recomendado para el evento) |
 
@@ -112,6 +113,46 @@ funciona es abrir el `index.html` con doble clic desde el escritorio.
 
 ---
 
+## Armar tu propio marco (F2) — lo que antes se hacía en OBS
+
+Presiona **F2** y se abre el editor de capas. Funciona como OBS: todo lo que
+se ve es una **capa** que se puede mover, estirar, girar, esconder y ordenar.
+
+**Para poner un marco:**
+
+1. **F2** → **Agregar imagen…** y elige tu PNG.
+2. Si el PNG es vertical 9:16 entra solo como marco de pantalla completa.
+   Si no, arrástralo y estíralo desde las esquinas.
+3. Asegúrate de que el marco esté **arriba de la Cámara** en la lista
+   (arriba = al frente). Con **▲ / ▼** se cambia el orden.
+4. Cierra con **F2**. Ya queda guardado.
+
+**La cámara también es una capa:** selecciónala y cámbiale el tamaño igual
+que a una imagen. Así se hacen los montajes donde la foto va en un recuadro
+y el resto es diseño.
+
+| Acción | Cómo |
+|---|---|
+| Mover | Arrastrar |
+| Cambiar tamaño | Arrastrar las esquinas o los lados |
+| Conservar la proporción | **Shift** mientras arrastras una esquina |
+| Mover finito | Flechas del teclado (**Shift** = más rápido) |
+| Borrar una capa | **Supr** o la **✕** de su renglón |
+| Esconder sin borrar | El **👁** de su renglón |
+| Opacidad y giro | Los dos deslizadores del panel |
+| Ajustar / Llenar / Centrar | Botones de **Encuadre** |
+
+**Importante:** usa PNG con fondo transparente para los marcos. Un JPG no
+tiene transparencia y taparía la cámara por completo.
+
+**Todo se guarda solo** en esa computadora (dentro del navegador). Para pasar
+el montaje a otra máquina usa **Exportar** y luego **Importar** allá.
+
+> La foto final sale **exactamente** igual a lo que se ve en pantalla, en
+> 1080×1920 (9:16, tamaño de historia).
+
+---
+
 ## Cambiar los "looks"
 
 Las escenas están en `scenes.js`. Cada una es un filtro CSS:
@@ -136,6 +177,7 @@ Se cambian con 5 Enter rápidos durante el evento.
 |---|---|
 | `booth-config.js` | **Lo único que se edita.** Cloudinary y ajustes. |
 | `scenes.js` | Los "looks" de las fotos. |
+| `layers.js` | El editor de capas de **F2** (marcos, logos, cámara). |
 | `app.js` | Toda la lógica del booth. |
 | `index.html` / `styles.css` | La pantalla. |
 | `sw.js` | Hace que el booth abra aunque se caiga el WiFi. |
@@ -146,8 +188,9 @@ Se cambian con 5 Enter rápidos durante el evento.
 
 ## Diferencias con la versión de OBS
 
-Esta versión no usa OBS. Los "looks" se hacen con filtros del navegador en
-vez de escenas de OBS. A cambio no hay nada que instalar ni configurar en
-la computadora del evento.
+Esta versión no usa OBS: el montaje se arma dentro de la misma página con
+el editor de **F2** (capas, marcos y tamaño de cámara) y los "looks" se
+hacen con filtros del navegador. A cambio no hay nada que instalar ni
+configurar en la computadora del evento.
 
 La versión con OBS sigue viviendo en el repositorio `gdn_photo_booth`.

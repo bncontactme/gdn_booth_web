@@ -180,10 +180,13 @@ const grainUrl = grainTile.toDataURL();
 
 function applyScene() {
     const scene = SCENES[sceneIndex];
-    const mirror = CFG.mirror !== false;
 
-    video.style.filter = scene.filter || "none";
-    video.style.transform = mirror ? "scaleX(-1)" : "none";
+    // La capa de camara la maneja layers.js (posicion, tamano y espejo);
+    // aqui solo se le pasa el "look" de la escena.
+    BoothLayers.setCamera({
+        filter: scene.filter || "none",
+        mirror: CFG.mirror !== false,
+    });
 
     vignetteEl.style.opacity = String(scene.vignette || 0);
     grainEl.style.opacity = String(scene.grain || 0);
@@ -191,46 +194,36 @@ function applyScene() {
     grainEl.style.backgroundRepeat = "repeat";
 }
 
-// ── Captura ─────────────────────────────────────────────────────────────────
-
 /**
- * Recorta el cuadro de la camara a vertical 9:16, aplica el look de la
- * escena y devuelve un JPEG. La foto queda igual que la vista previa.
+ * Arma la foto final: pinta todas las capas (camara + imagenes) en el mismo
+ * orden y con la misma geometria que la vista previa, y encima el look de la
+ * escena. La foto queda igual que lo que la gente vio en pantalla.
  */
 function drawFrame() {
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    if (!vw || !vh) return null;
+    const cam = BoothLayers.cameraLayer();
+    const camReady = video.videoWidth > 0 && video.videoHeight > 0;
 
-    // Recorte centrado a 9:16
-    const target = 9 / 16;
-    let sw, sh, sx, sy;
-    if (vw / vh > target) {
-        sh = vh; sw = Math.round(vh * target); sx = Math.round((vw - sw) / 2); sy = 0;
-    } else {
-        sw = vw; sh = Math.round(vw / target); sx = 0; sy = Math.round((vh - sh) / 2);
-    }
+    // Si la camara esta visible pero todavia no da imagen, no hay foto que
+    // tomar. Si la escondieron a proposito, se puede capturar solo el montaje.
+    if (cam.visible && !camReady) return null;
 
-    // Nunca agrandamos la imagen: solo reducimos si excede el lado largo.
-    const outH = Math.min(sh, CFG.maxLongEdge);
-    const outW = Math.round(outH * target);
+    const outH = Math.max(320, Math.round(CFG.maxLongEdge));
+    const outW = Math.round(outH * 9 / 16);
 
     canvas.width = outW;
     canvas.height = outH;
     const ctx = canvas.getContext("2d");
 
-    const scene = SCENES[sceneIndex];
-    const supportsFilter = "filter" in ctx;
+    // Fondo negro: lo que ninguna capa cubra no debe salir transparente.
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, outW, outH);
 
-    ctx.save();
-    if (CFG.mirror !== false) {
-        ctx.translate(outW, 0);
-        ctx.scale(-1, 1);
-    }
-    if (supportsFilter) ctx.filter = scene.filter || "none";
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
-    ctx.restore();
-    if (supportsFilter) ctx.filter = "none";
+    const scene = SCENES[sceneIndex];
+
+    BoothLayers.drawTo(ctx, outW, outH, {
+        filter: scene.filter || "none",
+        mirror: CFG.mirror !== false,
+    });
 
     // Vineta
     if (scene.vignette) {
@@ -249,8 +242,7 @@ function drawFrame() {
         ctx.save();
         ctx.globalAlpha = scene.grain;
         ctx.globalCompositeOperation = "overlay";
-        const pattern = ctx.createPattern(grainTile, "repeat");
-        ctx.fillStyle = pattern;
+        ctx.fillStyle = ctx.createPattern(grainTile, "repeat");
         ctx.fillRect(0, 0, outW, outH);
         ctx.restore();
     }
@@ -619,6 +611,7 @@ async function checkHealth() {
 captureBtn.addEventListener("click", () => {
     if (healthPanel.classList.contains("show")) return;
     if (lockOverlay.classList.contains("show")) return;
+    if (BoothLayers.isEditing()) return;
     startCountdown();
 });
 
@@ -632,9 +625,19 @@ document.addEventListener("keydown", (e) => {
         else { checkHealth(); show(healthPanel); }
         return;
     }
-    if (e.key === "Escape") { hide(healthPanel); return; }
+    if (e.key === "F2") {
+        e.preventDefault();
+        if (!lockOverlay.classList.contains("show")) toggleEditor();
+        return;
+    }
+    if (e.key === "Escape") {
+        hide(healthPanel);
+        if (BoothLayers.isEditing()) toggleEditor(false);
+        return;
+    }
     if (healthPanel.classList.contains("show")) return;
     if (lockOverlay.classList.contains("show")) return;
+    if (BoothLayers.isEditing()) return;
 
     if (e.key !== "Enter") return;
     e.preventDefault();
@@ -658,6 +661,7 @@ document.addEventListener("keydown", (e) => {
 frameEl.addEventListener("click", () => {
     if (healthPanel.classList.contains("show")) return;
     if (lockOverlay.classList.contains("show")) return;
+    if (BoothLayers.isEditing()) return;
     startCountdown();
 });
 
@@ -691,25 +695,80 @@ lockInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); attemptUnlock(); }
 });
 
+// ── Editor de escena (F2) ───────────────────────────────────────────────────
+
+function toggleEditor(force) {
+    const open = force === undefined ? !BoothLayers.isEditing() : force;
+    if (open) {
+        cancelCountdown();
+        resetBooth();
+        hide(healthPanel);   // si no, el editor queda debajo del panel de F1
+    }
+    BoothLayers.setEditing(open);
+    buttonContainer.style.visibility = open ? "hidden" : "visible";
+}
+
+$("ed-close").addEventListener("click", () => toggleEditor(false));
+$("ed-add").addEventListener("click", () => $("ed-file").click());
+
+$("ed-file").addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files || []);
+    for (const f of files) {
+        await BoothLayers.addImage(f, f.name.replace(/\.[^.]+$/, ""));
+    }
+    e.target.value = "";   // permite volver a cargar el mismo archivo
+});
+
+$("ed-fit").addEventListener("click", () => BoothLayers.fitSelected("fit"));
+$("ed-fill").addEventListener("click", () => BoothLayers.fitSelected("fill"));
+$("ed-center").addEventListener("click", () => BoothLayers.fitSelected("center"));
+
+$("ed-export").addEventListener("click", () => BoothLayers.exportLayout());
+$("ed-import").addEventListener("click", () => $("ed-import-file").click());
+$("ed-import-file").addEventListener("change", async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) await BoothLayers.importLayout(f);
+    e.target.value = "";
+});
+
+$("ed-reset").addEventListener("click", () => {
+    if (confirm("¿Borrar todas las imágenes y dejar solo la cámara?")) {
+        BoothLayers.reset();
+    }
+});
+
 // ── Arranque ────────────────────────────────────────────────────────────────
 
-applyScene();
+(async function boot() {
+    await BoothLayers.init({
+        frameEl,
+        hostEl:   $("layer-host"),
+        videoEl:  video,
+        selectEl: $("ed-select"),
+        panelEl:  $("editor-panel"),
+        listEl:   $("ed-list"),
+        propsEl:  $("ed-props"),
+        onChange: checkHealth,
+    });
 
-if (!CFG.pin) {
-    // Sin PIN configurado: arranca directo, como antes.
-    initCamera();
-    checkHealth();
-} else {
-    let remembered = "";
-    try { remembered = sessionStorage.getItem("gdn_booth_pin") || ""; } catch { /* modo privado */ }
+    applyScene();
 
-    if (remembered === CFG.pin) {
-        unlockBooth(remembered);
+    if (!CFG.pin) {
+        // Sin PIN configurado: arranca directo, como antes.
+        initCamera();
+        checkHealth();
     } else {
-        show(lockOverlay);
-        lockInput.focus();
+        let remembered = "";
+        try { remembered = sessionStorage.getItem("gdn_booth_pin") || ""; } catch { /* modo privado */ }
+
+        if (remembered === CFG.pin) {
+            unlockBooth(remembered);
+        } else {
+            show(lockOverlay);
+            lockInput.focus();
+        }
     }
-}
+})();
 
 setInterval(processQueue, RETRY_INTERVAL);
 setTimeout(processQueue, 3000);

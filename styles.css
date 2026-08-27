@@ -43,11 +43,37 @@ html, body {
     background: #000;
 }
 
-#video {
+/* ── Capas (tipo OBS) ──────────────────────────────────────────────────── */
+
+#layer-host {
+    position: absolute;
+    inset: 0;
+}
+
+/* Cada capa es una caja colocada en % del escenario, para que la vista
+   previa y la foto final coincidan exactamente. */
+.layer-box {
+    position: absolute;
+    transform-origin: center center;
+    will-change: transform;
+}
+.layer-box > video,
+.layer-box > img {
     width: 100%;
     height: 100%;
-    object-fit: cover;   /* recorta a 9:16 sin deformar a la gente */
     display: block;
+    pointer-events: none;
+}
+/* La camara recorta sin deformar; los marcos se estiran a su caja. */
+.layer-box > video { object-fit: cover; background: #000; }
+.layer-box > img   { object-fit: fill; }
+
+/* En modo editor se ve el contorno de cada capa. */
+#frame.editing .layer-box { outline: 1px dashed rgba(255,255,255,0.35); }
+#frame.editing .layer-box.selected { outline: 2px solid #00a0ff; }
+#frame.editing { cursor: default; touch-action: none; }
+
+#video {
     background: #000;
 }
 
@@ -298,6 +324,130 @@ html, body {
     font-size: 12px;
 }
 .health-facts div { margin-bottom: 3px; }
+
+/* ── Editor de escena (F2) ─────────────────────────────────────────────── */
+
+/* Recuadro de seleccion con sus 8 manijas. */
+#ed-select {
+    position: absolute;
+    z-index: 240;
+    border: 2px solid #00a0ff;
+    transform-origin: center center;
+    pointer-events: none;
+}
+#ed-select[hidden] { display: none; }
+
+.ed-h {
+    position: absolute;
+    width: 14px; height: 14px;
+    margin: -8px 0 0 -8px;
+    background: #fff;
+    border: 2px solid #00a0ff;
+    pointer-events: auto;
+    touch-action: none;
+}
+.ed-h[data-h="nw"] { left: 0;    top: 0;    cursor: nwse-resize; }
+.ed-h[data-h="n"]  { left: 50%;  top: 0;    cursor: ns-resize; }
+.ed-h[data-h="ne"] { left: 100%; top: 0;    cursor: nesw-resize; }
+.ed-h[data-h="w"]  { left: 0;    top: 50%;  cursor: ew-resize; }
+.ed-h[data-h="e"]  { left: 100%; top: 50%;  cursor: ew-resize; }
+.ed-h[data-h="sw"] { left: 0;    top: 100%; cursor: nesw-resize; }
+.ed-h[data-h="s"]  { left: 50%;  top: 100%; cursor: ns-resize; }
+.ed-h[data-h="se"] { left: 100%; top: 100%; cursor: nwse-resize; }
+
+/* Panel lateral con la lista de capas. */
+#editor-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: 300px;
+    max-width: 92vw;
+    height: 100vh;
+    z-index: 650;
+    background: #c0c0c0;
+    color: #000;
+    border-left: 3px solid #ffffff;
+    display: none;
+    flex-direction: column;
+}
+#editor-panel.show { display: flex; }
+
+.ed-titlebar {
+    background: #000080;
+    color: #fff;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.ed-x {
+    background: #c0c0c0;
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #808080; border-bottom: 2px solid #808080;
+    font-family: inherit; font-size: 11px; font-weight: bold;
+    width: 20px; height: 18px; cursor: pointer;
+}
+
+.ed-body { padding: 10px; overflow-y: auto; flex: 1; }
+
+.ed-label {
+    font-size: 11px;
+    font-weight: bold;
+    margin: 12px 0 5px;
+    text-transform: uppercase;
+    color: #000080;
+}
+
+.ed-btn { font-size: 12px; padding: 6px 10px; box-shadow: none; outline: none; }
+.ed-wide { width: 100%; }
+.ed-row { display: flex; gap: 6px; }
+.ed-row .ed-btn { flex: 1; }
+
+.ed-list {
+    border-top: 2px solid #808080; border-left: 2px solid #808080;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+    background: #fff;
+    max-height: 34vh;
+    overflow-y: auto;
+}
+.ed-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 6px;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #e0e0e0;
+}
+.ed-item.sel { background: #000080; color: #fff; }
+.ed-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ed-eye, .ed-mini {
+    background: #c0c0c0;
+    border-top: 1px solid #fff; border-left: 1px solid #fff;
+    border-right: 1px solid #808080; border-bottom: 1px solid #808080;
+    font-size: 11px; line-height: 1;
+    padding: 3px 5px;
+    cursor: pointer;
+    color: #000;
+}
+.ed-mini:disabled { color: #808080; cursor: default; }
+
+.ed-props { margin-top: 10px; }
+.ed-prop { margin-bottom: 8px; }
+.ed-prop label { display: block; font-size: 11px; margin-bottom: 3px; }
+.ed-prop input[type=range] { width: 100%; }
+
+.ed-empty { padding: 10px; font-size: 11px; color: #505050; text-align: center; }
+.ed-hint {
+    margin-top: 12px;
+    font-size: 10px;
+    line-height: 1.45;
+    color: #303030;
+    border-top: 1px solid #808080;
+    padding-top: 8px;
+}
 
 /* ── Candado (PIN) ─────────────────────────────────────────────────────── */
 

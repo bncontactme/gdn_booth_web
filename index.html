@@ -18,7 +18,18 @@
 <!-- Escenario: video vertical 9:16 centrado -->
 <div id="stage">
     <div id="frame">
-        <video id="video" autoplay playsinline muted></video>
+        <!-- Aqui viven las capas: la camara y las imagenes que cargues. -->
+        <div id="layer-host">
+            <video id="video" autoplay playsinline muted></video>
+        </div>
+
+        <!-- Recuadro de seleccion del editor (F2) -->
+        <div id="ed-select" hidden>
+            <div class="ed-h" data-h="nw"></div><div class="ed-h" data-h="n"></div><div class="ed-h" data-h="ne"></div>
+            <div class="ed-h" data-h="w"></div><div class="ed-h" data-h="e"></div>
+            <div class="ed-h" data-h="sw"></div><div class="ed-h" data-h="s"></div><div class="ed-h" data-h="se"></div>
+        </div>
+
         <div id="vignette"></div>
         <div id="grain"></div>
     </div>
@@ -65,6 +76,43 @@
     </div>
 </div>
 
+<!-- Editor de escena (F2) — capas tipo OBS -->
+<div id="editor-panel">
+    <div class="ed-titlebar">
+        <span>Escena — capas</span>
+        <button class="ed-x" id="ed-close" title="Cerrar (F2)">✕</button>
+    </div>
+    <div class="ed-body">
+        <button class="win95-btn ed-btn ed-wide" id="ed-add">Agregar imagen…</button>
+        <input type="file" id="ed-file" accept="image/*" multiple hidden>
+
+        <div class="ed-label">Capas (arriba = al frente)</div>
+        <div class="ed-list" id="ed-list"></div>
+
+        <div class="ed-props" id="ed-props"></div>
+
+        <div class="ed-label">Encuadre</div>
+        <div class="ed-row">
+            <button class="win95-btn ed-btn" id="ed-fit">Ajustar</button>
+            <button class="win95-btn ed-btn" id="ed-fill">Llenar</button>
+            <button class="win95-btn ed-btn" id="ed-center">Centrar</button>
+        </div>
+
+        <div class="ed-label">Escena</div>
+        <div class="ed-row">
+            <button class="win95-btn ed-btn" id="ed-export">Exportar</button>
+            <button class="win95-btn ed-btn" id="ed-import">Importar</button>
+            <button class="win95-btn ed-btn" id="ed-reset">Borrar todo</button>
+        </div>
+        <input type="file" id="ed-import-file" accept="application/json,.json" hidden>
+
+        <div class="ed-hint">
+            Arrastra para mover · esquinas para el tamaño · Shift conserva la
+            proporción · flechas mueven · Supr borra la capa.
+        </div>
+    </div>
+</div>
+
 <!-- Candado: pide un PIN antes de dejar usar el booth -->
 <div class="overlay" id="lock-overlay">
     <div class="win95-dialog">
@@ -102,6 +150,7 @@
 <script src="booth-config.js"></script>
 <script src="scenes.js"></script>
 <script src="vendor/qrcode.min.js"></script>
+<script src="layers.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

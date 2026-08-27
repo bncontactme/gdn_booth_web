@@ -327,6 +327,32 @@ html, body {
 
 /* ── Editor de escena (F2) ─────────────────────────────────────────────── */
 
+/* Boton discreto arriba a la derecha: abre el editor sin usar el teclado
+   (util en tablet). Se esconde solo mientras se toma la foto. */
+#editor-open {
+    position: fixed;
+    top: 10px; right: 10px;
+    z-index: 600;
+    background: #c0c0c0;
+    color: #000;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #808080;
+    border-bottom: 2px solid #808080;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 6px 10px;
+    cursor: pointer;
+    opacity: 0.55;
+    transition: opacity 0.15s;
+}
+#editor-open:hover { opacity: 1; }
+#editor-open:active {
+    border-top-color: #808080; border-left-color: #808080;
+    border-right-color: #ffffff; border-bottom-color: #ffffff;
+}
+#editor-open.hidden { display: none; }
+
 /* Recuadro de seleccion con sus 8 manijas. */
 #ed-select {
     position: absolute;

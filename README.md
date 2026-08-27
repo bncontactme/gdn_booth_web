@@ -26,7 +26,7 @@ Eso es todo. No se instala nada.
 |---|---|
 | **Enter** | Toma la foto |
 | **5 Enter rápidos** | Cambia de escena (el "look" de la foto) |
-| **F2** | Abre el editor de capas (marcos, logos, tamaño de la cámara) |
+| **F2** | Abre el editor de capas (o el botón **⚙ Escena**, arriba a la derecha) |
 | **F1** | Muestra el estado del booth y cómo arreglar lo que falle |
 | **F11** | Pantalla completa (recomendado para el evento) |
 
@@ -115,12 +115,15 @@ funciona es abrir el `index.html` con doble clic desde el escritorio.
 
 ## Armar tu propio marco (F2) — lo que antes se hacía en OBS
 
-Presiona **F2** y se abre el editor de capas. Funciona como OBS: todo lo que
-se ve es una **capa** que se puede mover, estirar, girar, esconder y ordenar.
+Presiona **F2** —o toca el botón **⚙ Escena** de arriba a la derecha— y se
+abre el editor de capas. Funciona como OBS: todo lo que se ve es una **capa**
+que se puede mover, estirar, girar, esconder y ordenar.
+
+El botón se esconde solo mientras se toma la foto, para que no estorbe.
 
 **Para poner un marco:**
 
-1. **F2** → **Agregar imagen…** y elige tu PNG.
+1. **F2** (o **⚙ Escena**) → **Agregar imagen…** y elige tu PNG.
 2. Si el PNG es vertical 9:16 entra solo como marco de pantalla completa.
    Si no, arrástralo y estíralo desde las esquinas.
 3. Asegúrate de que el marco esté **arriba de la Cámara** en la lista

@@ -64,6 +64,7 @@ const lockOverlay = $("lock-overlay");
 const lockInput = $("lock-input");
 const lockError = $("lock-error");
 const lockSubmitBtn = $("lock-submit");
+const editorOpenBtn = $("editor-open");
 
 let currentStream = null;
 let sessionPin = "";
@@ -367,6 +368,15 @@ function setBusy(v) {
     busy = v;
     captureBtn.disabled = v;
     buttonContainer.style.visibility = v ? "hidden" : "visible";
+    updateEditorButton();
+}
+
+/** El boton de "Escena" solo estorba durante la foto: se esconde solo. */
+function updateEditorButton() {
+    const hidden = busy
+        || BoothLayers.isEditing()
+        || lockOverlay.classList.contains("show");
+    editorOpenBtn.classList.toggle("hidden", hidden);
 }
 
 function resetBooth() {
@@ -675,6 +685,7 @@ function unlockBooth(pin) {
     try { sessionStorage.setItem("gdn_booth_pin", pin); } catch { /* modo privado */ }
     hide(lockOverlay);
     lockError.textContent = "";
+    updateEditorButton();
     initCamera();
     checkHealth();
 }
@@ -706,7 +717,10 @@ function toggleEditor(force) {
     }
     BoothLayers.setEditing(open);
     buttonContainer.style.visibility = open ? "hidden" : "visible";
+    updateEditorButton();
 }
+
+editorOpenBtn.addEventListener("click", () => toggleEditor(true));
 
 $("ed-close").addEventListener("click", () => toggleEditor(false));
 $("ed-add").addEventListener("click", () => $("ed-file").click());
@@ -766,6 +780,7 @@ $("ed-reset").addEventListener("click", () => {
         } else {
             show(lockOverlay);
             lockInput.focus();
+            updateEditorButton();
         }
     }
 })();

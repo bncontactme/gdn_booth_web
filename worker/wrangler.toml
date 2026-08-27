@@ -1,0 +1,15 @@
+name = "gdn-booth-sign"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+# Estos NO son secretos: aparecen en la subida de todos modos.
+CLOUDINARY_CLOUD_NAME = ""
+CLOUDINARY_API_KEY = ""
+CLOUDINARY_FOLDER = "gdn_booth"
+
+# El link exacto de tu booth, para que nadie mas pueda pedir firmas.
+ALLOWED_ORIGIN = "https://bncontactme.github.io"
+
+# CLOUDINARY_API_SECRET NO va aqui. Se guarda aparte con:
+#   npx wrangler secret put CLOUDINARY_API_SECRET

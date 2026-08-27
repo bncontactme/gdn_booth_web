@@ -12,6 +12,7 @@
 const CFG = Object.assign({
     cloudName: "",
     uploadPreset: "",
+    signUrl: "",
     folder: "gdn_booth",
     countdownSeconds: 3,
     qrSeconds: 18,
@@ -257,23 +258,61 @@ function canvasToJpeg(cv) {
 
 // ── Subida a Cloudinary (preset sin firma) ──────────────────────────────────
 
+// Hay dos formas de subir, y el booth elige sola:
+//
+//   MODO FIRMADO (si booth-config.js tiene signUrl)
+//     Un worker guarda la clave secreta y devuelve una firma de un solo uso.
+//     Nada sensible vive en esta pagina.
+//
+//   MODO PRESET (si solo hay cloudName + uploadPreset)
+//     Mas facil de montar, pero el preset queda a la vista de cualquiera.
+const usingSignedMode = () => Boolean(CFG.signUrl);
+
 function isConfigured() {
-    return Boolean(CFG.cloudName && CFG.uploadPreset);
+    return usingSignedMode() || Boolean(CFG.cloudName && CFG.uploadPreset);
+}
+
+async function fetchSignature(publicId, signal) {
+    const res = await fetch(CFG.signUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicId }),
+        signal,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `firma HTTP ${res.status}`);
+    if (!data.signature || !data.apiKey || !data.cloudName) {
+        throw new Error("el worker respondio incompleto");
+    }
+    return data;
 }
 
 async function uploadToCloudinary(blob, publicId) {
-    const fd = new FormData();
-    fd.append("file", blob);
-    fd.append("upload_preset", CFG.uploadPreset);
-    fd.append("public_id", publicId);
-    if (CFG.folder) fd.append("folder", CFG.folder);
-
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
 
     try {
+        const fd = new FormData();
+        fd.append("file", blob);
+
+        let cloudName = CFG.cloudName;
+
+        if (usingSignedMode()) {
+            const sig = await fetchSignature(publicId, controller.signal);
+            cloudName = sig.cloudName;
+            fd.append("api_key", sig.apiKey);
+            fd.append("timestamp", String(sig.timestamp));
+            fd.append("signature", sig.signature);
+            fd.append("public_id", sig.publicId);
+            if (sig.folder) fd.append("folder", sig.folder);
+        } else {
+            fd.append("upload_preset", CFG.uploadPreset);
+            fd.append("public_id", publicId);
+            if (CFG.folder) fd.append("folder", CFG.folder);
+        }
+
         const res = await fetch(
-            `https://api.cloudinary.com/v1_1/${encodeURIComponent(CFG.cloudName)}/image/upload`,
+            `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/upload`,
             { method: "POST", body: fd, signal: controller.signal }
         );
         const data = await res.json().catch(() => ({}));
@@ -467,13 +506,12 @@ async function buildProblems() {
         });
     }
 
-    if (!CFG.cloudName || !CFG.uploadPreset) {
-        const falta = [!CFG.cloudName && "cloudName", !CFG.uploadPreset && "uploadPreset"].filter(Boolean);
+    if (!isConfigured()) {
         problems.push({
             level: "error",
             title: "Cloudinary no está configurado",
-            detail: `Falta llenar en booth-config.js: ${falta.join(", ")}`,
-            fix: "Abre el archivo booth-config.js y pon tu Cloud name y el nombre de tu upload preset (sin firma). Sin esto las fotos no se pueden subir y no hay código QR.",
+            detail: "booth-config.js no tiene ni signUrl ni cloudName + uploadPreset.",
+            fix: "Abre booth-config.js y llena UNA de las dos opciones: signUrl (modo seguro, ver worker/README.md) o cloudName + uploadPreset. Sin esto las fotos no se suben y no hay código QR.",
         });
     }
 
@@ -545,7 +583,9 @@ async function checkHealth() {
 
     html += '<div class="health-facts">'
         + `<div><b>Cámara:</b> ${cameraError ? "con problema" : "funcionando"}</div>`
-        + `<div><b>Cloudinary:</b> ${isConfigured() ? escapeHtml(CFG.cloudName) : "NO configurado"}</div>`
+        + `<div><b>Cloudinary:</b> ${!isConfigured() ? "NO configurado"
+            : usingSignedMode() ? "modo firmado (seguro)"
+            : escapeHtml(CFG.cloudName) + " (preset visible)"}</div>`
         + `<div><b>Internet:</b> ${navigator.onLine ? "conectado" : "SIN conexión"}</div>`
         + `<div><b>Fotos sin subir:</b> ${pending}</div>`
         + `<div><b>Escena actual:</b> ${escapeHtml(SCENES[sceneIndex].name)}</div>`

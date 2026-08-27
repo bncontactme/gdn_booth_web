@@ -67,6 +67,11 @@ uploadPreset: "tu_preset",
 
 Eso es lo único que hay que editar.
 
+> **Opcional pero recomendado:** hay un **modo seguro** en el que tu clave
+> de Cloudinary nunca aparece en la página. Se monta una vez y es gratis.
+> Ver [`worker/README.md`](worker/README.md). Puedes empezar con el preset
+> normal y cambiarte después sin tocar nada más.
+
 ### Paso 3 — Publicar en GitHub Pages
 
 1. Crea un repositorio **público** nuevo en GitHub.
@@ -87,9 +92,9 @@ Ese link es el que compartes.
 
 ## Cosas que hay que saber
 
-**El `upload preset` es público.** Cualquiera que vea el código de la
-página puede verlo y subir imágenes a tu cuenta de Cloudinary. Así
-funcionan las subidas sin firma — no hay forma de esconderlo en una
+**El `upload preset` es público** (si NO usas el modo seguro del
+`worker/`). Cualquiera que vea el código de la página puede verlo y subir
+imágenes a tu cuenta de Cloudinary. Así funcionan las subidas sin firma — no hay forma de esconderlo en una
 página estática. Para que no sea un problema, en el preset de Cloudinary:
 
 - limita el **tamaño máximo** de archivo,
@@ -134,6 +139,7 @@ Se cambian con 5 Enter rápidos durante el evento.
 | `app.js` | Toda la lógica del booth. |
 | `index.html` / `styles.css` | La pantalla. |
 | `sw.js` | Hace que el booth abra aunque se caiga el WiFi. |
+| `worker/` | Modo seguro opcional: firma las subidas sin exponer tu clave. |
 | `vendor/qrcode.min.js` | Generador de códigos QR (incluido, sin internet). |
 
 ---

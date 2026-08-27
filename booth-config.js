@@ -24,7 +24,20 @@ window.BOOTH_CONFIG = {
   uploadPreset: "",
 
   // --------------------------------------------------------------------
-  //  3. AJUSTES (opcional — funcionan bien asi)
+  //  3. MODO SEGURO (opcional, recomendado)
+  // --------------------------------------------------------------------
+  //  Si llenas esto, el "uploadPreset" de arriba YA NO SE USA y tu cuenta
+  //  de Cloudinary queda protegida: la clave secreta vive en el worker,
+  //  nunca en esta pagina.
+  //
+  //  Pega aqui el link que te da Cloudflare al publicar worker/worker.js.
+  //  Instrucciones completas en  worker/README.md
+  //
+  //  Ejemplo:  "https://gdn-booth-sign.TU-USUARIO.workers.dev"
+  signUrl: "",
+
+  // --------------------------------------------------------------------
+  //  4. AJUSTES (opcional — funcionan bien asi)
   // --------------------------------------------------------------------
 
   // Carpeta dentro de Cloudinary. Debe ser LA MISMA que pusiste en el preset.

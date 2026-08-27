@@ -9,3 +9,7 @@ node_modules/
 .env.*
 *.pem
 *.key
+
+# Cloudflare
+worker/.wrangler/
+.dev.vars

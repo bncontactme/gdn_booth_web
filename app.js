@@ -758,6 +758,7 @@ $("ed-reset").addEventListener("click", () => {
         selectEl: $("ed-select"),
         guidesEl: $("ed-guides"),
         snapEl:   $("ed-snaplines"),
+        distEl:   $("ed-dist"),
         safeMargin: CFG.safeMargin,
         panelEl:  $("editor-panel"),
         listEl:   $("ed-list"),

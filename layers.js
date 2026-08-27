@@ -34,6 +34,7 @@ window.BoothLayers = (function () {
     let selectEl = null;
     let guidesEl = null;
     let snapEl = null;
+    let distEl = null;
     let onChange = () => {};
 
     const nodes = Object.create(null);   // id -> { box, media }
@@ -175,6 +176,7 @@ window.BoothLayers = (function () {
         });
 
         drawSelection();
+        showDistances(editing ? byId(selectedId) : null);
     }
 
     // ── Dibujo en el canvas (la foto final) ─────────────────────────────────
@@ -498,6 +500,47 @@ window.BoothLayers = (function () {
         snapEl.innerHTML = "";
     }
 
+    // ── Medidas de distancia (como Instagram) ───────────────────────────────
+    //
+    // Se muestran los cuatro huecos entre la capa y la orilla de la foto, en
+    // pixeles de la foto final (1080x1920). Si el numero de la izquierda y el
+    // de la derecha son iguales, la capa esta centrada — sin adivinar.
+
+    const PHOTO_W = 1080, PHOTO_H = 1920;
+
+    function showDistances(l) {
+        if (!distEl) return;
+        if (!l) { distEl.hidden = true; distEl.innerHTML = ""; return; }
+
+        const left   = l.x;
+        const right  = 1 - (l.x + l.w);
+        const top    = l.y;
+        const bottom = 1 - (l.y + l.h);
+
+        // Un hueco negativo significa que la capa se sale de la foto: eso se
+        // marca aparte porque es justo lo que hay que evitar.
+        const px = (v, total) => Math.round(v * total);
+        const midY = (l.y + l.h / 2) * 100;
+        const midX = (l.x + l.w / 2) * 100;
+
+        const parts = [];
+        if (left > 0.001) parts.push(
+            `<div class="ed-d h" style="left:0;width:${left * 100}%;top:${midY}%;transform:translateY(-50%)">
+                <span>${px(left, PHOTO_W)}</span></div>`);
+        if (right > 0.001) parts.push(
+            `<div class="ed-d h" style="right:0;width:${right * 100}%;top:${midY}%;transform:translateY(-50%)">
+                <span>${px(right, PHOTO_W)}</span></div>`);
+        if (top > 0.001) parts.push(
+            `<div class="ed-d v" style="top:0;height:${top * 100}%;left:${midX}%;transform:translateX(-50%)">
+                <span>${px(top, PHOTO_H)}</span></div>`);
+        if (bottom > 0.001) parts.push(
+            `<div class="ed-d v" style="bottom:0;height:${bottom * 100}%;left:${midX}%;transform:translateX(-50%)">
+                <span>${px(bottom, PHOTO_H)}</span></div>`);
+
+        distEl.innerHTML = parts.join("");
+        distEl.hidden = parts.length === 0;
+    }
+
     let drag = null;
 
     function onPointerDown(e) {
@@ -709,7 +752,7 @@ window.BoothLayers = (function () {
         panelEl.classList.toggle("show", v);
         frameEl.classList.toggle("editing", v);
         if (guidesEl) guidesEl.hidden = !v;
-        if (!v) { selectedId = null; clearSnapLines(); }
+        if (!v) { selectedId = null; clearSnapLines(); showDistances(null); }
         syncPreview();
         renderPanel();
         onChange();
@@ -724,6 +767,7 @@ window.BoothLayers = (function () {
         selectEl = opts.selectEl;
         guidesEl = opts.guidesEl;
         snapEl = opts.snapEl;
+        distEl = opts.distEl;
         panelEl = opts.panelEl;
 
         if (typeof opts.safeMargin === "number") {

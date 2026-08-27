@@ -150,6 +150,8 @@ y el resto es diseño.
 Al abrir el editor aparecen dos ayudas encima del escenario (**nunca salen
 en la foto**, son solo del editor):
 
+- **Esquinas y borde blanco** — hasta ahí llega la foto. Lo que quede
+  fuera de ese borde **no sale** en la imagen final.
 - **Recuadro punteado** — el *margen seguro*. Lo importante (caras, logos,
   texto) conviene que quede adentro: pegado a la orilla se ve apretado y en
   algunas pantallas se recorta. Se cambia con `safeMargin` en
@@ -159,7 +161,12 @@ en la foto**, son solo del editor):
 
 ### Alineación automática
 
-Al arrastrar, las capas se **pegan solas** y aparece una **línea magenta**
+Al seleccionar una capa aparecen **medidas verdes** con la distancia a cada
+orilla de la foto, en píxeles de la imagen final (1080×1920). Cuando el
+número de la izquierda y el de la derecha son iguales, está centrada — sin
+tener que adivinar.
+
+Al arrastrar, las capas se **pegan solas** y aparece una **línea verde**
 mostrando con qué se están alineando. Se pega a:
 
 - el centro de la pantalla (horizontal y vertical),

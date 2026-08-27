@@ -23,8 +23,13 @@
             <video id="video" autoplay playsinline muted></video>
         </div>
 
-        <!-- Guias del editor: margen seguro y tercios -->
+        <!-- Guias del editor: limite de la foto, margen seguro y tercios -->
         <div id="ed-guides" hidden>
+            <!-- Hasta aqui llega la foto: esquinas tipo visor de camara -->
+            <div class="ed-limit"></div>
+            <div class="ed-corner tl"></div><div class="ed-corner tr"></div>
+            <div class="ed-corner bl"></div><div class="ed-corner br"></div>
+
             <div class="ed-safe"></div>
             <div class="ed-third ed-tv1"></div>
             <div class="ed-third ed-tv2"></div>
@@ -32,8 +37,9 @@
             <div class="ed-third ed-th2"></div>
         </div>
 
-        <!-- Lineas de alineacion que aparecen al arrastrar -->
+        <!-- Lineas verdes de alineacion y medidas de distancia -->
         <div id="ed-snaplines" hidden></div>
+        <div id="ed-dist" hidden></div>
 
         <!-- Recuadro de seleccion del editor (F2) -->
         <div id="ed-select" hidden>

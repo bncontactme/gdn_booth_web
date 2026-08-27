@@ -364,6 +364,23 @@ html, body {
 }
 #ed-guides[hidden] { display: none; }
 
+/* El borde exacto hasta donde llega la foto. */
+.ed-limit {
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(255,255,255,0.9);
+}
+/* Esquinas tipo visor, para que se lea de un golpe donde corta la foto. */
+.ed-corner {
+    position: absolute;
+    width: 26px; height: 26px;
+    border: 4px solid #fff;
+}
+.ed-corner.tl { top:0; left:0;  border-right:0; border-bottom:0; }
+.ed-corner.tr { top:0; right:0; border-left:0;  border-bottom:0; }
+.ed-corner.bl { bottom:0; left:0;  border-right:0; border-top:0; }
+.ed-corner.br { bottom:0; right:0; border-left:0;  border-top:0; }
+
 /* Lo importante de la foto debe quedar dentro de este recuadro.
    Los dos valores son distintos a proposito: en CSS un % vertical se mide
    contra el alto y uno horizontal contra el ancho, y el escenario es 9:16.
@@ -384,8 +401,8 @@ html, body {
 .ed-th1 { top: 33.333%; }
 .ed-th2 { top: 66.666%; }
 
-/* Lineas magenta de alineacion, como en Instagram/Figma: aparecen solo
-   mientras arrastras y desaparecen al soltar. */
+/* Lineas verdes de alineacion, como en Instagram: aparecen mientras
+   arrastras y desaparecen al soltar. */
 #ed-snaplines {
     position: absolute;
     inset: 0;
@@ -395,11 +412,52 @@ html, body {
 #ed-snaplines[hidden] { display: none; }
 .ed-snap {
     position: absolute;
-    background: #ff2d95;
-    box-shadow: 0 0 4px rgba(255,45,149,0.9);
+    background: #00e676;
+    box-shadow: 0 0 5px rgba(0,230,118,0.95);
 }
+.ed-snap.v { width: 2px; }
+.ed-snap.h { height: 2px; }
 .ed-snap.v { top: 0; bottom: 0; width: 1px; }
 .ed-snap.h { left: 0; right: 0; height: 1px; }
+
+/* Medidas: cuanto hay de la capa a cada orilla de la foto. Igual que en
+   Instagram, sirven para ver de un vistazo si algo quedo centrado. */
+#ed-dist {
+    position: absolute;
+    inset: 0;
+    z-index: 246;
+    pointer-events: none;
+}
+#ed-dist[hidden] { display: none; }
+
+.ed-d {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* La linea punteada que cubre el hueco medido. */
+.ed-d::before {
+    content: "";
+    position: absolute;
+    background-image: repeating-linear-gradient(
+        var(--dir, to right),
+        #00e676 0 4px, transparent 4px 8px);
+}
+.ed-d.h::before { left:0; right:0; top:50%; height:2px; }
+.ed-d.v::before { top:0; bottom:0; left:50%; width:2px; --dir: to bottom; }
+
+.ed-d span {
+    position: relative;
+    background: #00e676;
+    color: #00301a;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1;
+    padding: 3px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
 
 /* Recuadro de seleccion con sus 8 manijas. */
 #ed-select {

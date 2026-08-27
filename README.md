@@ -147,9 +147,10 @@ y el resto es diseño.
 
 ### El marco que se ve en pantalla
 
-Alrededor del encuadre hay un **marco con esquinas tipo visor**. Está
+La foto va enmarcada como una **ventana de Windows 95**: barra de título
+azul, relieve gris y el borde hundido alrededor de la imagen. Está
 **siempre visible** (no solo al editar) y vive **por fuera** de la foto: no
-tapa nada, solo le dice a la gente *hasta aquí sale en la foto*.
+le tapa un solo pixel, solo le dice a la gente *hasta aquí sale en la foto*.
 
 Se apaga con `showPhotoFrame: false` en `booth-config.js`.
 

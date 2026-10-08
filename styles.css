@@ -848,6 +848,31 @@ body.editing .side-bar { filter: brightness(0.3); }
     font-weight: bold;
 }
 
+/* Teclado en pantalla del candado: teclas grandes para el dedo. */
+#pin-pad {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.pin-row { display: flex; justify-content: center; gap: 5px; }
+.pin-key {
+    flex: 0 1 54px;
+    min-width: 0;
+    height: clamp(38px, 6.4vh, 56px);
+    padding: 0;
+    font-size: clamp(15px, 2.6vh, 22px);
+    letter-spacing: 0;
+    box-shadow: none;
+    outline: none;
+    touch-action: manipulation;
+}
+.pin-key:active {
+    border-top-color: #808080; border-left-color: #808080;
+    border-right-color: #ffffff; border-bottom-color: #ffffff;
+}
+.pin-back { flex-basis: 80px; }
+
 /* Insignia de estado — solo aparece cuando algo esta mal. */
 #health-badge {
     position: fixed;

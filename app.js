@@ -798,8 +798,10 @@ function unlockBooth(pin) {
 
 function attemptUnlock() {
     const value = lockInput.value.trim();
-    if (value && value === CFG.pin) {
-        unlockBooth(value);
+    // Sin distinguir mayusculas: el teclado en pantalla solo escribe en
+    // mayusculas. Al worker se le manda el PIN tal como esta en la config.
+    if (value && value.toUpperCase() === String(CFG.pin).toUpperCase()) {
+        unlockBooth(CFG.pin);
     } else {
         lockError.textContent = "PIN incorrecto.";
         lockInput.value = "";
@@ -811,6 +813,41 @@ lockSubmitBtn.addEventListener("click", attemptUnlock);
 lockInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); attemptUnlock(); }
 });
+
+// Teclado en pantalla del candado. Va dentro de la pagina porque el teclado
+// del sistema (en el Switch, Onboard) queda escondido detras del navegador
+// a pantalla completa. Con teclado fisico se puede escribir igual.
+const PIN_ROWS = ["1234567890", "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM⌫"];
+
+(function buildPinPad() {
+    const pad = $("pin-pad");
+    for (const row of PIN_ROWS) {
+        const rowEl = document.createElement("div");
+        rowEl.className = "pin-row";
+        for (const key of row) {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "win95-btn pin-key" + (key === "⌫" ? " pin-back" : "");
+            b.textContent = key;
+            b.setAttribute("aria-label", key === "⌫" ? "Borrar" : key);
+            rowEl.appendChild(b);
+        }
+        pad.appendChild(rowEl);
+    }
+    // pointerdown + preventDefault: la tecla responde al instante y el
+    // cuadro del PIN no pierde el foco (asi Enter fisico sigue funcionando).
+    pad.addEventListener("pointerdown", (e) => {
+        const b = e.target.closest(".pin-key");
+        if (!b) return;
+        e.preventDefault();
+        lockError.textContent = "";
+        if (b.classList.contains("pin-back")) {
+            lockInput.value = lockInput.value.slice(0, -1);
+        } else {
+            lockInput.value += b.textContent;
+        }
+    });
+})();
 
 // ── Editor de escena (F2) ───────────────────────────────────────────────────
 

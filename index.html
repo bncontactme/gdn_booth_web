@@ -175,8 +175,12 @@
         <div class="win95-dialog-titlebar">Camara.exe — Bloqueado</div>
         <div class="win95-dialog-body">
             Pide el PIN a quien esta a cargo del evento.
-            <input type="password" id="lock-input" class="win95-input" inputmode="numeric" autocomplete="off" placeholder="PIN">
+            <!-- inputmode="none": el teclado de la pantalla es el de abajo, no
+                 el del sistema (que en pantalla completa queda escondido). -->
+            <input type="password" id="lock-input" class="win95-input" inputmode="none" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="PIN">
             <div id="lock-error"></div>
+            <!-- Teclado en pantalla: siempre a la vista, para pantallas tactiles -->
+            <div id="pin-pad" aria-label="Teclado"></div>
         </div>
         <div class="win95-dialog-footer">
             <button class="win95-btn" id="lock-submit">Entrar</button>

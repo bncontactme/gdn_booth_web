@@ -37,22 +37,25 @@ html, body {
    Todo el escenario sale de ahi, asi que cambiar de formato reacomoda solo. */
 /* Espacio que ocupa el marco Win95 alrededor de la foto. */
 :root {
-    --gap: 9px;         /* lados y abajo */
+    --gap: 9px;         /* a los lados */
     --gap-top: 30px;    /* arriba cabe la barra de titulo */
+    /* Abajo, dentro de la ventana y debajo de la foto, va el boton. */
+    --footer-h: clamp(46px, 8vh, 84px);
+    --gap-bottom: calc(var(--gap) + var(--footer-h));
 }
 
 #frame-wrap {
     position: relative;
     line-height: 0;
     /* El marco Win95 vive en este padding, no encima de la foto. */
-    padding: var(--gap-top) var(--gap) var(--gap);
+    padding: var(--gap-top) var(--gap) var(--gap-bottom);
     z-index: 3;   /* por encima de las barras de los lados */
 }
 
 /* Lo que el marco le come a la pantalla, por eje. */
 :root {
     --chrome-x: calc(var(--gap) * 2 + 12px);
-    --chrome-y: calc(var(--gap-top) + var(--gap) + 12px);
+    --chrome-y: calc(var(--gap-top) + var(--gap-bottom) + 12px);
 }
 
 #frame {
@@ -94,7 +97,7 @@ html, body {
     position: absolute;
     left: calc(var(--gap) - 6px);
     right: calc(var(--gap) - 6px);
-    bottom: calc(var(--gap) - 6px);
+    bottom: calc(var(--gap-bottom) - 6px);
     top: calc(var(--gap-top) - 6px);
     border-top: 3px solid #808080;
     border-left: 3px solid #808080;
@@ -213,6 +216,11 @@ html, body {
 .side-bar.right { right: 0; }
 .side-bar img { width: 100%; max-height: 100%; object-fit: contain; display: block; }
 
+/* En pantalla vertical las barras quedan de unos cuantos pixeles: ahi el
+   logo saldria como una rayita, mejor no ponerlo. */
+.side-bar { container-type: inline-size; }
+@container (max-width: 90px) { .side-bar img { display: none; } }
+
 /* ── Boton Win95 ───────────────────────────────────────────────────────── */
 
 .win95-btn {
@@ -241,13 +249,38 @@ html, body {
 }
 .win95-btn:disabled { color: #808080; text-shadow: 1px 1px 0 #fff; cursor: default; }
 
+/* El boton ocupa la franja de abajo de la ventana Camara.exe: debajo de la
+   foto, nunca encima. Su letra se mide contra el ancho de la ventana, asi
+   que cabe igual en Story (angosta) que en Completo (ancha). */
 #button-container {
-    position: fixed;
-    bottom: 36px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
+    position: absolute;
+    left: var(--gap);
+    right: var(--gap);
+    bottom: 6px;
+    height: calc(var(--footer-h) - 4px);
+    padding-top: 6px;
+    line-height: normal;
+    z-index: 2;
+    container-type: inline-size;
 }
+#capture {
+    width: 100%;
+    height: 100%;
+    padding: 0 10px;
+    font-size: clamp(13px, 5cqw, 30px);
+    letter-spacing: 0.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: none;
+}
+/* Cada tanto el boton de la pantalla se "aprieta" solo, como invitando a
+   apretar el de verdad. */
+#capture:not(:disabled) { animation: nudge 2.6s ease-in-out infinite; }
+@keyframes nudge {
+    0%, 84%, 100% { border-color: #ffffff #808080 #808080 #ffffff; transform: none; }
+    88%, 95%      { border-color: #808080 #ffffff #ffffff #808080; transform: translate(1px, 1px); }
+}
+@media (prefers-reduced-motion: reduce) { #capture { animation: none !important; } }
 
 /* ── Cuenta regresiva y flash ──────────────────────────────────────────── */
 
@@ -300,56 +333,127 @@ html, body {
 }
 .overlay.show { display: flex; }
 
-#qr-image {
-    width: min(300px, 42vh);
-    height: min(300px, 42vh);
-    image-rendering: pixelated;
-    border: 6px solid #fff;
-    border-radius: 8px;
-    background: #fff;
+/* ── Ventanas grandes (las que ve la gente, no el operador) ─────────────
+   Mismo Win95 que el resto, pero medidas con la pantalla: se tienen que
+   leer de lejos en una tele. */
+
+.win95-window {
+    background: #c0c0c0;
+    color: #000;
+    border-top: 3px solid #ffffff;
+    border-left: 3px solid #ffffff;
+    border-right: 3px solid #808080;
+    border-bottom: 3px solid #808080;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.7);
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
 }
-#qr-message {
-    margin-top: 20px;
-    font-size: clamp(18px, 3.2vh, 30px);
+.win95-titlebar {
+    background: #000080;
+    color: #fff;
     font-weight: bold;
-    text-shadow: 2px 2px 0 #000;
+    font-size: clamp(12px, 1.9vh, 20px);
+    line-height: 1.2;
+    padding: 0.3em 0.4em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.win95-titlebar .pf-btns i { width: 1.3em; height: 1.1em; font-size: 0.8em; }
+
+/* Barra de progreso de bloquecitos, como al copiar archivos. */
+.win95-progress {
+    height: clamp(16px, 2.6vh, 28px);
+    padding: 2px;
+    background: #fff;
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+}
+.win95-progress-fill {
+    height: 100%;
+    width: 0;
+    background: repeating-linear-gradient(to right,
+        #000080 0 calc(var(--seg, 14px) - 3px),
+        transparent calc(var(--seg, 14px) - 3px) var(--seg, 14px));
+}
+@keyframes fillUp { from { width: 0; } to { width: 100%; } }
+@keyframes drain  { from { width: 100%; } to { width: 0; } }
+
+/* Guardando la foto */
+.copy-dialog { width: min(560px, 86vw); }
+.copy-body { padding: clamp(14px, 2.6vh, 28px); }
+#uploading-text {
+    font-size: clamp(15px, 2.4vh, 26px);
+    font-weight: bold;
+    margin-bottom: 1.6vh;
+}
+
+/* Resultado: la foto a un lado y el QR al otro. */
+#qr-overlay { background: rgba(0,0,0,0.9); }
+.result {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4vh;
+    max-width: 100%;
+}
+.result-photo-body {
+    line-height: 0;
+    background: #000;
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+}
+#result-photo {
+    display: block;
+    max-height: 74vh;
+    max-width: 44vw;
+}
+.result-side { width: min(46vh, 42vw); }
+.result-body {
+    padding: clamp(12px, 2.2vh, 26px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.6vh;
+    text-align: center;
+}
+#qr-image {
+    width: 100%;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+    background: #fff;
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+}
+#qr-image[hidden] { display: none; }
+#qr-message {
+    font-size: clamp(16px, 3vh, 34px);
+    font-weight: bold;
+    line-height: 1.2;
 }
 #qr-hint {
-    margin-top: 14px;
-    color: #ccc;
-    font-size: clamp(12px, 1.9vh, 17px);
-    max-width: 620px;
-    line-height: 1.5;
-}
-
-/* Respaldo cuando no hay internet: se muestra la foto para que le tomen
-   una foto a la pantalla con el telefono. */
-#fallback-photo {
-    max-width: 46vh;
-    max-height: 62vh;
-    border: 5px solid #fff;
-    background: #000;
-}
-#fallback-message {
-    margin-top: 18px;
-    font-size: clamp(17px, 2.8vh, 27px);
-    font-weight: bold;
-    text-shadow: 2px 2px 0 #000;
-    max-width: 620px;
+    font-size: clamp(12px, 1.8vh, 20px);
     line-height: 1.4;
+    color: #202020;
 }
+.result-timer { width: 100%; --seg: 10px; }
 
-/* Spinner de subida */
-#uploading-overlay .spinner {
-    width: 54px; height: 54px;
-    border: 6px solid #444;
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-    margin-bottom: 22px;
+/* Pantalla vertical (tele girada): una ventana arriba de la otra. */
+@media (orientation: portrait) {
+    .result { flex-direction: column; gap: 2.5vh; }
+    #result-photo { max-height: 42vh; max-width: 80vw; }
+    .result-side { width: min(80vw, 30vh); }
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-#uploading-text { font-size: clamp(17px, 2.6vh, 24px); font-weight: bold; }
 
 /* ── Dialogos Win95 ────────────────────────────────────────────────────── */
 
@@ -448,6 +552,12 @@ html, body {
     border-right-color: #ffffff; border-bottom-color: #ffffff;
 }
 #editor-open.hidden { display: none; }
+
+/* Modo kiosco (?kiosk en la direccion): en un evento la gente no debe ver
+   el boton del editor ni el cursor. F2 sigue abriendo el editor. */
+body.kiosk #editor-open { display: none; }
+body.kiosk.cursor-hidden,
+body.kiosk.cursor-hidden * { cursor: none !important; }
 
 /* Guias fijas: margen seguro y tercios. Solo se ven en el editor y nunca
    salen en la foto (son elementos del DOM, no del canvas). */

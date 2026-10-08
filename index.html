@@ -61,6 +61,12 @@
         <div id="vignette"></div>
         <div id="grain"></div>
     </div>
+
+    <!-- Boton principal: vive en la parte de abajo de la ventana, debajo de
+         la foto, para no taparle nada a quien se esta acomodando. -->
+    <div id="button-container">
+        <button class="win95-btn" id="capture">Presiona el botón para tomar tu foto</button>
+    </div>
   </div>
 </div>
 
@@ -75,23 +81,38 @@
 <div id="countdown-overlay"><span id="countdown-number"></span></div>
 <div id="flash"></div>
 
-<!-- Subiendo -->
+<!-- Subiendo: dialogo de "copiando archivo" de Windows 95 -->
 <div class="overlay" id="uploading-overlay">
-    <div class="spinner"></div>
-    <div id="uploading-text">Subiendo tu foto…</div>
+    <div class="win95-window copy-dialog">
+        <div class="win95-titlebar"><span>Guardando…</span></div>
+        <div class="copy-body">
+            <div id="uploading-text">Guardando Tu_foto.jpg en la nube…</div>
+            <div class="win95-progress"><div class="win95-progress-fill" id="upload-bar"></div></div>
+        </div>
+    </div>
 </div>
 
-<!-- Codigo QR -->
+<!-- Resultado: la foto que se acaba de tomar y, a un lado, su codigo QR.
+     Sin internet o sin Cloudinary, en lugar del QR sale un aviso. -->
 <div class="overlay" id="qr-overlay">
-    <img id="qr-image" alt="Codigo QR">
-    <div id="qr-message"></div>
-    <div id="qr-hint"></div>
-</div>
-
-<!-- Respaldo sin internet: se muestra la foto en pantalla -->
-<div class="overlay" id="fallback-overlay">
-    <img id="fallback-photo" alt="Tu foto">
-    <div id="fallback-message"></div>
+    <div class="result">
+        <div class="win95-window result-photo">
+            <div class="win95-titlebar">
+                <span>Tu_foto.jpg</span>
+                <span class="pf-btns" aria-hidden="true"><i>_</i><i>□</i><i>✕</i></span>
+            </div>
+            <div class="result-photo-body"><img id="result-photo" alt="Tu foto"></div>
+        </div>
+        <div class="win95-window result-side">
+            <div class="win95-titlebar"><span id="result-title">Descargar.exe</span></div>
+            <div class="result-body">
+                <img id="qr-image" alt="Código QR">
+                <div id="qr-message"></div>
+                <div id="qr-hint"></div>
+                <div class="win95-progress result-timer"><div class="win95-progress-fill" id="result-bar"></div></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Cambio de escena -->
@@ -178,11 +199,6 @@
             <button class="win95-btn" id="health-close">Cerrar</button>
         </div>
     </div>
-</div>
-
-<!-- Boton principal -->
-<div id="button-container">
-    <button class="win95-btn" id="capture">Presiona Enter Para Tomar Foto</button>
 </div>
 
 <script src="booth-config.js"></script>

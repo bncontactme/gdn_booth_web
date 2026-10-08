@@ -25,8 +25,14 @@ const CFG = Object.assign({
     background: "gdn",
     format: "story",
     showPhotoFrame: true,
+    buttonText: "Presiona el botón para tomar tu foto",
     qrMessage: "¡Escanea para descargar tu foto!",
+    kiosk: false,
 }, window.BOOTH_CONFIG || {});
+
+// ?kiosk en la direccion prende el modo kiosco sin tocar booth-config.js
+// (asi lo abre el Switch; la misma pagina en una compu sigue normal).
+const KIOSK = CFG.kiosk || new URLSearchParams(location.search).has("kiosk");
 
 const SCENES = (window.BOOTH_SCENES && window.BOOTH_SCENES.length)
     ? window.BOOTH_SCENES
@@ -38,6 +44,10 @@ const ENTER_COMBO_COUNT = 5;
 const SCENE_DISPLAY_MS = 1800;
 const UPLOAD_TIMEOUT_MS = 20000;
 const FALLBACK_DISPLAY_MS = 20000;
+// Cuanto se espera a que la foto termine de subir antes de enseñar el QR de
+// todos modos. Con buen internet sube antes; con malo, el QR no se atora.
+const QUICK_UPLOAD_MS = 6000;
+const CURSOR_IDLE_MS = 3000;
 
 const $ = (id) => document.getElementById(id);
 const video = $("video");
@@ -51,13 +61,14 @@ const countdownOverlay = $("countdown-overlay");
 const countdownNumber = $("countdown-number");
 const flashEl = $("flash");
 const uploadingOverlay = $("uploading-overlay");
+const uploadBar = $("upload-bar");
 const qrOverlay = $("qr-overlay");
 const qrImage = $("qr-image");
 const qrMessageEl = $("qr-message");
 const qrHintEl = $("qr-hint");
-const fallbackOverlay = $("fallback-overlay");
-const fallbackPhoto = $("fallback-photo");
-const fallbackMessage = $("fallback-message");
+const resultPhoto = $("result-photo");
+const resultTitle = $("result-title");
+const resultBar = $("result-bar");
 const sceneOverlay = $("scene-overlay");
 const sceneNameEl = $("scene-name");
 const healthPanel = $("health-panel");
@@ -75,6 +86,7 @@ let currentStream = null;
 let sessionPin = "";
 let sceneIndex = 0;
 let busy = false;              // countdown / capture / upload in progress
+let counting = false;          // solo la cuenta regresiva (parte de busy)
 let cameraError = null;
 let enterCount = 0;
 let enterTimer = null;
@@ -283,6 +295,16 @@ function isConfigured() {
     return usingSignedMode() || Boolean(CFG.cloudName && CFG.uploadPreset);
 }
 
+/**
+ * Donde va a quedar una foto en Cloudinary. Se sabe ANTES de subirla
+ * (carpeta + nombre), asi que el QR puede salir aunque la subida tarde:
+ * el link empieza a funcionar en cuanto la foto termina de subir.
+ */
+function cloudinaryUrlFor(publicId, cloudName = CFG.cloudName) {
+    const folderPart = CFG.folder ? `${CFG.folder}/` : "";
+    return `https://res.cloudinary.com/${cloudName}/image/upload/${folderPart}${publicId}.jpg`;
+}
+
 async function fetchSignature(publicId, signal) {
     const res = await fetch(CFG.signUrl, {
         method: "POST",
@@ -336,8 +358,7 @@ async function uploadToCloudinary(blob, publicId) {
             // arriba, asi que cuenta como exito. Sin esto la cola reintentaria
             // esa foto para siempre.
             if (/already exists/i.test(msg)) {
-                const folderPart = CFG.folder ? `${CFG.folder}/` : "";
-                return `https://res.cloudinary.com/${cloudName}/image/upload/${folderPart}${publicId}.jpg`;
+                return cloudinaryUrlFor(publicId, cloudName);
             }
             throw new Error(msg);
         }
@@ -350,6 +371,20 @@ async function uploadToCloudinary(blob, publicId) {
 // ── Reintentos en segundo plano ─────────────────────────────────────────────
 
 let retrying = false;
+const uploading = new Set();   // publicIds que ya van subiendo ahorita
+
+/** Sube una foto de la cola y la saca de ahi. No la sube dos veces a la vez. */
+async function uploadItem(item) {
+    if (uploading.has(item.publicId)) return null;
+    uploading.add(item.publicId);
+    try {
+        const url = await uploadToCloudinary(item.blob, item.publicId);
+        await queueRemove(item.publicId).catch(() => {});
+        return url;
+    } finally {
+        uploading.delete(item.publicId);
+    }
+}
 
 async function processQueue() {
     if (retrying || !isConfigured() || !navigator.onLine) return;
@@ -357,9 +392,9 @@ async function processQueue() {
     try {
         const items = await queueAll();
         for (const item of items) {
+            if (uploading.has(item.publicId)) continue;
             try {
-                await uploadToCloudinary(item.blob, item.publicId);
-                await queueRemove(item.publicId);
+                await uploadItem(item);
                 console.log(`[Cola] Subida: ${item.publicId}`);
             } catch (err) {
                 console.log(`[Cola] Sigue fallando (${item.publicId}): ${err.message}`);
@@ -376,10 +411,20 @@ async function processQueue() {
 
 // ── Flujo principal ─────────────────────────────────────────────────────────
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+/** Arranca (o reinicia) una barra de progreso Win95 que dura `ms`. */
+function runBar(el, name, ms) {
+    el.style.animation = "none";
+    void el.offsetWidth;
+    el.style.animation = `${name} ${ms}ms linear forwards`;
+}
+
+// El boton se queda en su lugar (es parte de la ventana) y solo se apaga
+// mientras se toma la foto.
 function setBusy(v) {
     busy = v;
     captureBtn.disabled = v;
-    buttonContainer.style.visibility = v ? "hidden" : "visible";
     updateEditorButton();
 }
 
@@ -394,15 +439,16 @@ function updateEditorButton() {
 function resetBooth() {
     clearTimeout(overlayTimer);
     hide(qrOverlay);
-    hide(fallbackOverlay);
     hide(uploadingOverlay);
-    captureBtn.textContent = "Presiona Enter Para Tomar Foto";
+    captureBtn.textContent = CFG.buttonText;
     setBusy(false);
 }
 
 function startCountdown() {
     if (busy) return;
     setBusy(true);
+    counting = true;
+    captureBtn.textContent = "¡Sonríe! 📸";
 
     let count = Math.max(1, CFG.countdownSeconds | 0);
     countdownOverlay.style.display = "flex";
@@ -417,6 +463,7 @@ function startCountdown() {
             count--;
             countdownTimer = setTimeout(tick, 1000);
         } else {
+            counting = false;
             countdownOverlay.style.display = "none";
             flashEl.style.animation = "none";
             void flashEl.offsetWidth;
@@ -428,6 +475,7 @@ function startCountdown() {
 
 function cancelCountdown() {
     clearTimeout(countdownTimer);
+    counting = false;
     countdownOverlay.style.display = "none";
 }
 
@@ -446,60 +494,95 @@ async function takePhoto() {
     if (!isConfigured()) {
         // Sin Cloudinary no hay a donde subir: al menos que se lleven la foto
         // tomandole una foto a la pantalla.
-        showFallback(blob, "Falta configurar Cloudinary. Tómale una foto a la pantalla para llevarte tu foto.");
+        showResult(blob, { message: "Falta configurar Cloudinary. Tómale una foto a la pantalla para llevarte tu foto." });
         return;
     }
 
+    // Primero a la cola (se queda en el navegador) y DESPUES a subir: si se
+    // va el internet o la luz a medio camino, la foto sigue ahi y se sube sola.
+    const item = { publicId, blob, createdAt: Date.now() };
+    let saved = true;
+    try {
+        await queueAdd(item);
+    } catch (err) {
+        saved = false;
+        console.error("[Cola] No se pudo guardar:", err);
+    }
+
+    // Con la foto a salvo en la cola, el QR puede apuntar a donde va a quedar
+    // y no hace falta esperar a que termine de subir.
+    const canPredict = saved && Boolean(CFG.cloudName);
+    const waitMs = canPredict ? QUICK_UPLOAD_MS : UPLOAD_TIMEOUT_MS;
+
     show(uploadingOverlay);
+    runBar(uploadBar, "fillUp", waitMs);
 
-    try {
-        const url = await uploadToCloudinary(blob, publicId);
-        hide(uploadingOverlay);
-        showQR(url);
-    } catch (err) {
+    const upload = uploadItem(item).catch((err) => {
         console.error("[Subida] Fallo:", err.message);
-        hide(uploadingOverlay);
+        return null;
+    });
+    const url = canPredict
+        ? await Promise.race([upload, sleep(waitMs).then(() => null)])
+        : await upload;
+
+    hide(uploadingOverlay);
+
+    if (url) {
+        showResult(blob, { url, ready: true });
+    } else if (canPredict) {
+        showResult(blob, { url: cloudinaryUrlFor(publicId), ready: false });
+    } else if (saved) {
+        showResult(blob, { message: "No hay internet ahora mismo. Tu foto se guardó y se subirá sola. Mientras tanto, tómale una foto a la pantalla." });
+    } else {
+        showResult(blob, { message: "No se pudo subir la foto. Tómale una foto a la pantalla para no perderla." });
+    }
+    checkHealth();
+}
+
+let resultUrl = null;
+
+/**
+ * Pantalla final: la foto que se acaba de tomar y, a un lado, su QR. Si no
+ * hay QR que dar, en su lugar va un aviso para que le tomen foto a la
+ * pantalla. La barra de abajo marca cuanto falta para volver al inicio.
+ */
+async function showResult(blob, { url = "", ready = false, message = "" } = {}) {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = URL.createObjectURL(blob);
+    resultPhoto.src = resultUrl;
+
+    let hasQr = false;
+    if (url) {
         try {
-            await queueAdd({ publicId, blob, createdAt: Date.now() });
-            showFallback(blob, "No hay internet ahora mismo. Tu foto se guardó y se subirá sola. Mientras tanto, tómale una foto a la pantalla.");
-        } catch (dbErr) {
-            console.error("[Cola] No se pudo guardar:", dbErr);
-            showFallback(blob, "No se pudo subir la foto. Tómale una foto a la pantalla para no perderla.");
+            qrImage.src = await QRCode.toDataURL(url, {
+                width: 480, margin: 2,
+                color: { dark: "#000000", light: "#ffffff" },
+            });
+            hasQr = true;
+        } catch (err) {
+            console.error("[QR] Error generando el codigo:", err);
         }
-        checkHealth();
-    }
-}
-
-async function showQR(url) {
-    try {
-        const dataUrl = await QRCode.toDataURL(url, {
-            width: 420, margin: 2,
-            color: { dark: "#000000", light: "#ffffff" },
-        });
-        qrImage.src = dataUrl;
-    } catch (err) {
-        console.error("[QR] Error generando el codigo:", err);
     }
 
-    qrMessageEl.textContent = CFG.qrMessage;
-    qrHintEl.textContent = "📸 Te recomendamos tomarle una foto a tu código QR por si acaso.";
+    qrImage.hidden = !hasQr;
+    if (hasQr) {
+        resultTitle.textContent = "Descargar.exe";
+        qrMessageEl.textContent = CFG.qrMessage;
+        qrHintEl.textContent = ready
+            ? "📸 Te recomendamos tomarle una foto a tu código QR por si acaso."
+            : "Tu foto se está terminando de subir. Si al abrir el link todavía no aparece, inténtalo de nuevo en unos minutos.";
+    } else {
+        resultTitle.textContent = "Aviso";
+        qrMessageEl.textContent = message || "No se pudo generar el código QR. Tómale una foto a la pantalla.";
+        qrHintEl.textContent = "";
+    }
+
+    const ms = hasQr ? CFG.qrSeconds * 1000 : FALLBACK_DISPLAY_MS;
     show(qrOverlay);
+    runBar(resultBar, "drain", ms);
 
     clearTimeout(overlayTimer);
-    overlayTimer = setTimeout(resetBooth, CFG.qrSeconds * 1000);
-}
-
-let fallbackUrl = null;
-
-function showFallback(blob, message) {
-    if (fallbackUrl) URL.revokeObjectURL(fallbackUrl);
-    fallbackUrl = URL.createObjectURL(blob);
-    fallbackPhoto.src = fallbackUrl;
-    fallbackMessage.textContent = message;
-    show(fallbackOverlay);
-
-    clearTimeout(overlayTimer);
-    overlayTimer = setTimeout(resetBooth, FALLBACK_DISPLAY_MS);
+    overlayTimer = setTimeout(resetBooth, ms);
 }
 
 // ── Cambio de escena (5 Enter rapidos) ──────────────────────────────────────
@@ -641,6 +724,13 @@ healthCloseBtn.addEventListener("click", () => hide(healthPanel));
 healthBadge.addEventListener("click", () => { checkHealth(); show(healthPanel); });
 
 document.addEventListener("keydown", (e) => {
+    // Dejar el boton apretado repite la tecla solo. Eso no cuenta como otra
+    // pulsacion: si contara, cinco repeticiones cambiaban la escena y
+    // cancelaban la foto.
+    if (e.repeat && ["Enter", "F1", "F2"].includes(e.key)) {
+        e.preventDefault();
+        return;
+    }
     if (e.key === "F1") {
         e.preventDefault();
         if (healthPanel.classList.contains("show")) hide(healthPanel);
@@ -663,6 +753,11 @@ document.addEventListener("keydown", (e) => {
 
     if (e.key !== "Enter") return;
     e.preventDefault();
+
+    // Mientras se guarda la foto o esta el QR en pantalla, el boton no hace
+    // nada: si alguien lo sigue apretando no le quita el QR a quien lo esta
+    // escaneando. Durante la cuenta regresiva si cuenta (para el combo).
+    if (busy && !counting) return;
 
     // 5 Enter rapidos = cambiar de escena
     enterCount++;
@@ -690,7 +785,10 @@ window.addEventListener("offline", checkHealth);
 
 function unlockBooth(pin) {
     sessionPin = pin;
-    try { sessionStorage.setItem("gdn_booth_pin", pin); } catch { /* modo privado */ }
+    // Se recuerda en ESTE aparato, aunque se cierre el navegador: el booth
+    // vuelve a arrancar solo sin pedir teclado. Si cambias el PIN en
+    // booth-config.js, el viejo deja de servir y lo vuelve a pedir.
+    try { localStorage.setItem("gdn_booth_pin", pin); } catch { /* modo privado */ }
     hide(lockOverlay);
     lockError.textContent = "";
     updateEditorButton();
@@ -759,9 +857,30 @@ $("ed-reset").addEventListener("click", () => {
     }
 });
 
+// ── Modo kiosco ─────────────────────────────────────────────────────────────
+// Sin boton de editor a la vista y el cursor se esconde solo cuando no se
+// mueve el mouse. Con el editor abierto el cursor no se esconde.
+
+function setupKiosk() {
+    document.body.classList.add("kiosk");
+    let idleTimer = null;
+    const wake = () => {
+        document.body.classList.remove("cursor-hidden");
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+            if (!BoothLayers.isEditing()) document.body.classList.add("cursor-hidden");
+        }, CURSOR_IDLE_MS);
+    };
+    document.addEventListener("pointermove", wake);
+    document.addEventListener("pointerdown", wake);
+    wake();
+}
+
 // ── Arranque ────────────────────────────────────────────────────────────────
 
 if (CFG.showPhotoFrame === false) $("photo-frame").classList.add("hidden");
+captureBtn.textContent = CFG.buttonText;
+if (KIOSK) setupKiosk();
 
 (async function boot() {
     await BoothLayers.init({
@@ -792,7 +911,7 @@ if (CFG.showPhotoFrame === false) $("photo-frame").classList.add("hidden");
         checkHealth();
     } else {
         let remembered = "";
-        try { remembered = sessionStorage.getItem("gdn_booth_pin") || ""; } catch { /* modo privado */ }
+        try { remembered = localStorage.getItem("gdn_booth_pin") || ""; } catch { /* modo privado */ }
 
         if (remembered === CFG.pin) {
             unlockBooth(remembered);

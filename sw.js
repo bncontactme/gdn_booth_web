@@ -4,7 +4,7 @@
 //  el WiFi del lugar se caiga. Las fotos se suben aparte, desde app.js.
 // ============================================================================
 
-const CACHE = "gdn-booth-v2";
+const CACHE = "gdn-booth-v3";
 
 const SHELL = [
     "./",

@@ -109,6 +109,9 @@ window.BOOTH_CONFIG = {
   // Ponlo en false si sale texto al reves en las fotos.
   mirror: true,
 
+  // Texto del boton que va debajo de la foto.
+  buttonText: "Presiona el botón para tomar tu foto",
+
   // Texto que se muestra debajo del QR.
   qrMessage: "¡Escanea para descargar tu foto!",
 };

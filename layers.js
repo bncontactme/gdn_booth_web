@@ -29,7 +29,8 @@ window.BoothLayers = (function () {
     const DEFAULT_BACKGROUNDS = [
         { id: "gdn",    name: "GDN",    color: "#000000", bars: "assets/logo.jpg" },
         { id: "gdn-blanco", name: "GDN blanco", color: "#ffffff",
-          bars: "assets/logo.jpg", barsColor: "#ffffff", barsSize: 0.36 },
+          bars: "assets/logo.jpg", barsLeft: "assets/logo-2.png",
+          barsColor: "#ffffff", barsSize: 0.36 },
         { id: "blanco", name: "Blanco", color: "#ffffff" },
         { id: "negro",  name: "Negro",  color: "#000000" },
     ];
@@ -242,12 +243,14 @@ window.BoothLayers = (function () {
         // ── Barras de los lados (fuera de la foto) ─────────────────────────
         // barsColor: el color de los lados (negro si no se dice).
         // barsSize:  que tan ancho va el logo, de 0 a 1 (1 = todo el lado).
+        // barsLeft / barsRight: otra imagen para ese lado (si no, va "bars").
         const barsColor = b.barsColor || "#000";
         if (b.bars) {
             bars.forEach(el => { el.style.background = barsColor; });
             barImgs.forEach(im => {
+                const left = im.parentElement.classList.contains("left");
                 im.style.display = "";
-                im.src = b.bars;
+                im.src = (left ? b.barsLeft : b.barsRight) || b.bars;
                 im.style.width = b.barsSize ? `${Math.round(b.barsSize * 100)}%` : "";
             });
         } else {

@@ -89,13 +89,16 @@ window.BOOTH_CONFIG = {
   //    bars:  imagen SOLO para las barras de los lados (no sale en la foto)
   //    barsColor: color de las barras (negro si no se pone)
   //    barsSize:  ancho del logo en la barra, de 0 a 1 (1 = toda la barra)
+  //    barsLeft / barsRight: otra imagen solo para ese lado
   //    image: imagen que SI llena la foto entera (usalo solo si eso quieres)
   //
   //  Tambien se puede elegir desde la direccion: ?bg=gdn-blanco
   backgrounds: [
     { id: "gdn",    name: "GDN",    color: "#000000", bars: "assets/logo.jpg" },
+    // El lado de cada logo se decidio con un volado.
     { id: "gdn-blanco", name: "GDN blanco", color: "#ffffff",
-      bars: "assets/logo.jpg", barsColor: "#ffffff", barsSize: 0.36 },
+      bars: "assets/logo.jpg", barsLeft: "assets/logo-2.png",
+      barsColor: "#ffffff", barsSize: 0.36 },
     { id: "blanco", name: "Blanco", color: "#ffffff" },
     { id: "negro",  name: "Negro",  color: "#000000" },
   ],

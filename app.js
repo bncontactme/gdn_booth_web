@@ -31,6 +31,7 @@ const CFG = Object.assign({
     handCorner: "bottom-right",
     handAfterSeconds: 20,
     handImage: "assets/hand.png",
+    layout: "",
 }, window.BOOTH_CONFIG || {});
 
 // ?kiosk en la direccion prende el modo kiosco sin tocar booth-config.js
@@ -992,6 +993,13 @@ if (HAND_ON) setupHand();
         propsEl:  $("ed-props"),
         onChange: checkHealth,
     });
+
+    // Marco de assets/layouts/, elegido con ?layout=nombre (asi lo abre el
+    // Switch) o con layout en booth-config.js. Solo nombres simples.
+    const layoutName = new URLSearchParams(location.search).get("layout") || CFG.layout;
+    if (layoutName && /^[a-z0-9-]+$/i.test(layoutName)) {
+        await BoothLayers.useLayout(`${BoothLayers.layoutDir}${layoutName}.png`);
+    }
 
     applyScene();
 

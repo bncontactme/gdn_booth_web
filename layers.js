@@ -64,6 +64,7 @@ window.BoothLayers = (function () {
 
     // ── Guardado (IndexedDB propia, para no tocar la cola de subidas) ───────
 
+    const LAYOUT_DIR = "assets/layouts/";   // marcos que se eligen con ?layout
     const DB_NAME = "gdn_booth_layout";
     const STORE = "layout";
     const KEY = "current";
@@ -405,6 +406,28 @@ window.BoothLayers = (function () {
         renderPanel();
         save();
         onChange();
+        return l;
+    }
+
+    /**
+     * Pone un marco de assets/layouts/ (el de ?layout en la direccion) al
+     * frente. Si ya esta, no lo toca: alguien pudo haberlo acomodado en F2.
+     * Si habia otro de esa carpeta, lo cambia por este. Lo que se haya
+     * subido a mano en F2 se queda.
+     */
+    async function useLayout(url) {
+        if (layers.some(l => l.type === "image" && l.url === url)) return;
+        layers = layers.filter(l => !(l.type === "image"
+            && typeof l.url === "string" && l.url.startsWith(LAYOUT_DIR)));
+
+        // Los marcos son 9:16 (Story): si estaba en otro formato, se estiraria.
+        const size = await loadImageSize(url);
+        if (size.w && size.h && Math.abs(size.w / size.h - 9 / 16) < 0.04 && formatId !== "story") {
+            setFormat("story");
+        }
+        const l = await addImage(url, "Marco");
+        selectedId = null;
+        renderPanel();
         return l;
     }
 
@@ -946,6 +969,8 @@ window.BoothLayers = (function () {
         drawTo,
         setCamera,
         addImage,
+        useLayout,
+        layoutDir: LAYOUT_DIR,
         exportLayout,
         importLayout,
         fitSelected,

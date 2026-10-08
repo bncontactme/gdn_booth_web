@@ -109,6 +109,12 @@ window.BOOTH_CONFIG = {
   // Ponlo en false si sale texto al reves en las fotos.
   mirror: true,
 
+  // Marco (diseño) que va encima de la camara y sale en la foto. Es el
+  // nombre de un PNG 9:16 de assets/layouts/, sin el ".png". Tambien se
+  // puede elegir desde la direccion: ?layout=cigarro-manzana (asi lo abre
+  // el Switch). Vacio = sin marco (o el que se haya puesto a mano en F2).
+  layout: "",
+
   // Manita que señala una esquina cuando nadie usa el booth un rato.
   // Solo aparece si la direccion trae ?hand (asi lo abre el Switch), o
   // ?hand=top-left para elegir otra esquina desde la direccion.

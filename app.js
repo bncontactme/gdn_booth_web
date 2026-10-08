@@ -994,6 +994,11 @@ if (HAND_ON) setupHand();
         onChange: checkHealth,
     });
 
+    // Fondo elegido desde la direccion (?bg=gdn-blanco): asi lo abre el
+    // Switch sin tocar el editor. Un id que no exista se ignora.
+    const bgParam = new URLSearchParams(location.search).get("bg");
+    if (bgParam) BoothLayers.setBackground(bgParam);
+
     // Marco de assets/layouts/, elegido con ?layout=nombre (asi lo abre el
     // Switch) o con layout en booth-config.js. Solo nombres simples.
     const layoutName = new URLSearchParams(location.search).get("layout") || CFG.layout;

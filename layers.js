@@ -28,6 +28,8 @@ window.BoothLayers = (function () {
     ];
     const DEFAULT_BACKGROUNDS = [
         { id: "gdn",    name: "GDN",    color: "#000000", bars: "assets/logo.jpg" },
+        { id: "gdn-blanco", name: "GDN blanco", color: "#ffffff",
+          bars: "assets/logo-black.png", barsColor: "#ffffff", barsSize: 0.36 },
         { id: "blanco", name: "Blanco", color: "#ffffff" },
         { id: "negro",  name: "Negro",  color: "#000000" },
     ];
@@ -238,16 +240,23 @@ window.BoothLayers = (function () {
         }
 
         // ── Barras de los lados (fuera de la foto) ─────────────────────────
+        // barsColor: el color de los lados (negro si no se dice).
+        // barsSize:  que tan ancho va el logo, de 0 a 1 (1 = todo el lado).
+        const barsColor = b.barsColor || "#000";
         if (b.bars) {
-            bars.forEach(el => { el.style.background = "#000"; });
-            barImgs.forEach(im => { im.style.display = ""; im.src = b.bars; });
+            bars.forEach(el => { el.style.background = barsColor; });
+            barImgs.forEach(im => {
+                im.style.display = "";
+                im.src = b.bars;
+                im.style.width = b.barsSize ? `${Math.round(b.barsSize * 100)}%` : "";
+            });
         } else {
             bars.forEach(el => { el.style.background = color; });
             barImgs.forEach(im => { im.style.display = "none"; });
         }
 
         // Lo que sobra arriba/abajo del encuadre acompaña a las barras.
-        if (stage) stage.style.background = b.bars ? "#000" : color;
+        if (stage) stage.style.background = b.bars ? barsColor : color;
     }
 
     function setFormat(id) {

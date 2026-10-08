@@ -87,9 +87,15 @@ window.BOOTH_CONFIG = {
   //  Para agregar mas: copia un renglon y cambia los datos.
   //    color: el fondo DE LA FOTO (cualquier color CSS)
   //    bars:  imagen SOLO para las barras de los lados (no sale en la foto)
+  //    barsColor: color de las barras (negro si no se pone)
+  //    barsSize:  ancho del logo en la barra, de 0 a 1 (1 = toda la barra)
   //    image: imagen que SI llena la foto entera (usalo solo si eso quieres)
+  //
+  //  Tambien se puede elegir desde la direccion: ?bg=gdn-blanco
   backgrounds: [
     { id: "gdn",    name: "GDN",    color: "#000000", bars: "assets/logo.jpg" },
+    { id: "gdn-blanco", name: "GDN blanco", color: "#ffffff",
+      bars: "assets/logo-black.png", barsColor: "#ffffff", barsSize: 0.36 },
     { id: "blanco", name: "Blanco", color: "#ffffff" },
     { id: "negro",  name: "Negro",  color: "#000000" },
   ],

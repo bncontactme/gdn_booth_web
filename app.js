@@ -28,6 +28,9 @@ const CFG = Object.assign({
     buttonText: "Presiona el botón para tomar tu foto",
     qrMessage: "¡Escanea para descargar tu foto!",
     kiosk: false,
+    handCorner: "bottom-right",
+    handAfterSeconds: 20,
+    handImage: "assets/hand.png",
 }, window.BOOTH_CONFIG || {});
 
 // ?kiosk en la direccion prende el modo kiosco sin tocar booth-config.js
@@ -426,6 +429,7 @@ function setBusy(v) {
     busy = v;
     captureBtn.disabled = v;
     updateEditorButton();
+    scheduleHand();
 }
 
 /** El boton de "Escena" solo estorba durante la foto: se esconde solo. */
@@ -913,11 +917,60 @@ function setupKiosk() {
     wake();
 }
 
+// ── Manita (?hand) ──────────────────────────────────────────────────────────
+// Si nadie usa el booth un rato, aparece una mano señalando una esquina (la
+// del boton). Solo con ?hand en la direccion: el Switch la pide, la pagina
+// publica no. ?hand=top-left elige otra esquina sin tocar la config.
+
+const handParam = new URLSearchParams(location.search).get("hand");
+const HAND_ON = handParam !== null;
+const handEl = $("idle-hand");
+let handTimer = null;
+
+// La imagen apunta a la derecha; asi se voltea hacia cada esquina.
+const HAND_TURNS = {
+    "bottom-right": { turn: "rotate(40deg)",             poke: [1, 1] },
+    "top-right":    { turn: "rotate(-40deg)",            poke: [1, -1] },
+    "bottom-left":  { turn: "scaleX(-1) rotate(40deg)",  poke: [-1, 1] },
+    "top-left":     { turn: "scaleX(-1) rotate(-40deg)", poke: [-1, -1] },
+};
+
+function setupHand() {
+    const corner = HAND_TURNS[handParam] ? handParam
+                 : HAND_TURNS[CFG.handCorner] ? CFG.handCorner
+                 : "bottom-right";
+    const { turn, poke } = HAND_TURNS[corner];
+    handEl.dataset.corner = corner;
+    handEl.style.setProperty("--hand-turn", turn);
+    handEl.style.setProperty("--poke-x", poke[0]);
+    handEl.style.setProperty("--poke-y", poke[1]);
+    handEl.querySelector("img").src = CFG.handImage || "assets/hand.png";
+    document.addEventListener("keydown", scheduleHand);
+    document.addEventListener("pointerdown", scheduleHand);
+    scheduleHand();
+}
+
+/** Esconde la mano y la vuelve a programar: sale si el booth sigue quieto. */
+function scheduleHand() {
+    if (!HAND_ON) return;
+    handEl.classList.remove("show");
+    clearTimeout(handTimer);
+    handTimer = setTimeout(() => {
+        const idle = !busy
+            && !BoothLayers.isEditing()
+            && !lockOverlay.classList.contains("show")
+            && !healthPanel.classList.contains("show");
+        if (idle) handEl.classList.add("show");
+        else scheduleHand();
+    }, Math.max(3, Number(CFG.handAfterSeconds) || 20) * 1000);
+}
+
 // ── Arranque ────────────────────────────────────────────────────────────────
 
 if (CFG.showPhotoFrame === false) $("photo-frame").classList.add("hidden");
 captureBtn.textContent = CFG.buttonText;
 if (KIOSK) setupKiosk();
+if (HAND_ON) setupHand();
 
 (async function boot() {
     await BoothLayers.init({

@@ -77,6 +77,10 @@
 <!-- Lienzo de captura (nunca se ve) -->
 <canvas id="canvas" hidden></canvas>
 
+<!-- Manita: si nadie usa el booth un rato, señala la esquina. Solo sale con
+     ?hand en la direccion (el Switch si la pide; la pagina publica no). -->
+<div id="idle-hand" aria-hidden="true"><div class="hand-poke"><img alt=""></div></div>
+
 <!-- Cuenta regresiva y flash -->
 <div id="countdown-overlay"><span id="countdown-number"></span></div>
 <div id="flash"></div>

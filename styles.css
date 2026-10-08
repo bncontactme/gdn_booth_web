@@ -553,6 +553,34 @@ html, body {
 }
 #editor-open.hidden { display: none; }
 
+/* Manita (?hand): aparece cuando nadie usa el booth y "pica" hacia la
+   esquina. app.js le pone la esquina, el giro y hacia donde picar. */
+#idle-hand {
+    position: fixed;
+    z-index: 240;
+    width: clamp(150px, 30vh, 360px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s;
+}
+#idle-hand.show { opacity: 1; }
+#idle-hand[data-corner="bottom-right"] { right: 2.5vw; bottom: 6vh; }
+#idle-hand[data-corner="bottom-left"]  { left: 2.5vw;  bottom: 6vh; }
+#idle-hand[data-corner="top-right"]    { right: 2.5vw; top: 6vh; }
+#idle-hand[data-corner="top-left"]     { left: 2.5vw;  top: 6vh; }
+#idle-hand img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transform: var(--hand-turn, none);
+}
+#idle-hand.show .hand-poke { animation: handPoke 1.2s ease-in-out infinite; }
+@keyframes handPoke {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(calc(var(--poke-x, 1) * 2.4vh), calc(var(--poke-y, 1) * 2.4vh)); }
+}
+@media (prefers-reduced-motion: reduce) { #idle-hand.show .hand-poke { animation: none; } }
+
 /* Modo kiosco (?kiosk en la direccion): en un evento la gente no debe ver
    el boton del editor ni el cursor. F2 sigue abriendo el editor. */
 body.kiosk #editor-open { display: none; }

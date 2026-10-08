@@ -109,6 +109,16 @@ window.BOOTH_CONFIG = {
   // Ponlo en false si sale texto al reves en las fotos.
   mirror: true,
 
+  // Manita que señala una esquina cuando nadie usa el booth un rato.
+  // Solo aparece si la direccion trae ?hand (asi lo abre el Switch), o
+  // ?hand=top-left para elegir otra esquina desde la direccion.
+  //   handCorner: "bottom-right", "bottom-left", "top-right" o "top-left"
+  //   handImage:  la imagen de la mano, apuntando a la DERECHA (el booth
+  //               la gira hacia la esquina que elijas).
+  handCorner: "bottom-right",
+  handAfterSeconds: 20,
+  handImage: "assets/hand.png",
+
   // Texto del boton que va debajo de la foto.
   buttonText: "Presiona el botón para tomar tu foto",
 

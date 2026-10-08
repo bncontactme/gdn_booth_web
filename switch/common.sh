@@ -3,10 +3,11 @@
 #  (no se corre solo: los otros scripts lo cargan)
 # ============================================================================
 
-# La pagina del booth. ?kiosk esconde el boton del editor y el cursor.
+# La pagina del booth. ?kiosk esconde el boton del editor y el cursor;
+# &hand saca la mano que señala la esquina del boton cuando nadie lo usa.
 # La firma de Cloudinary solo acepta este dominio, asi que no la cambies por
 # una copia local: las fotos no subirian.
-BOOTH_URL="${BOOTH_URL:-https://bncontactme.github.io/gdn_booth_web/?kiosk}"
+BOOTH_URL="${BOOTH_URL:-https://bncontactme.github.io/gdn_booth_web/?kiosk&hand}"
 
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/gdn-photobooth"
 STOP_FLAG="$STATE_DIR/stop"

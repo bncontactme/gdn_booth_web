@@ -15,8 +15,8 @@ cámara  ->  cuenta regresiva  ->  foto  ->  Cloudinary  ->  código QR
 
 1. Abrir el link del booth.
 2. Cuando el navegador pregunte por la cámara, darle **Permitir**.
-3. Presionar **Enter** o el botón **Presiona Enter Para Tomar Foto**.
-4. Escanear el QR que aparece.
+3. Presionar **Enter** (o el botón gigante, que es un Enter).
+4. Aparece la foto junto a su QR: escanearlo para descargarla.
 
 Eso es todo. No se instala nada.
 
@@ -24,7 +24,7 @@ Eso es todo. No se instala nada.
 
 | Tecla | Qué hace |
 |---|---|
-| **Enter** | Toma la foto (o el botón de abajo) |
+| **Enter** | Toma la foto (o el botón debajo de la foto) |
 | **5 Enter rápidos** | Cambia de escena (el "look" de la foto) |
 | **F2** | Abre el editor de capas (o el botón **⚙ Escena**, arriba a la derecha) |
 | **F1** | Muestra el estado del booth y cómo arreglar lo que falle |
@@ -37,12 +37,30 @@ arregla, en español.
 
 ### Si se cae el internet
 
-No se pierde nada. La foto se guarda dentro del navegador y se sube sola
-en cuanto vuelve la conexión. Mientras tanto se muestra la foto en la
-pantalla para que la persona le tome foto con su teléfono.
+No se pierde nada. Cada foto se guarda primero dentro del navegador y
+luego se sube; si no hay conexión, se sube sola en cuanto vuelve.
+
+**El QR sale de todos modos.** Apunta a donde va a quedar la foto en
+Cloudinary, así que el link empieza a funcionar en cuanto termina de subir.
+Si la subida tarda, abajo del QR se le avisa a la persona que lo intente
+de nuevo en unos minutos.
+
+Mientras se ve el QR, el botón no hace nada: aunque alguien lo siga
+apretando, no le quita el QR a quien lo está escaneando.
 
 **Importante:** no cierres la pestaña hasta que F1 diga
 `Fotos sin subir: 0`.
+
+### Modo kiosco (Switch o pantalla de evento)
+
+Agrega `?kiosk` al link: se esconde el botón **⚙ Escena** y el cursor
+desaparece cuando no se mueve el mouse. **F2** sigue abriendo el editor.
+
+El PIN se recuerda en ese aparato: después de la primera vez, el booth
+arranca sin pedir teclado.
+
+Para correrlo en el Nintendo Switch (Linux) con un ícono de prender y otro
+de apagar, ver [`switch/README.md`](switch/README.md).
 
 ---
 
@@ -268,6 +286,7 @@ Se cambian con 5 Enter rápidos durante el evento.
 | `index.html` / `styles.css` | La pantalla. |
 | `sw.js` | Hace que el booth abra aunque se caiga el WiFi. |
 | `worker/` | Modo seguro opcional: firma las subidas sin exponer tu clave. |
+| `switch/` | Iconos para prender y apagar el booth en el Nintendo Switch (Linux). |
 | `vendor/qrcode.min.js` | Generador de códigos QR (incluido, sin internet). |
 
 ---

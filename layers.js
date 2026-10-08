@@ -29,7 +29,7 @@ window.BoothLayers = (function () {
     const DEFAULT_BACKGROUNDS = [
         { id: "gdn",    name: "GDN",    color: "#000000", bars: "assets/logo.jpg" },
         { id: "gdn-blanco", name: "GDN blanco", color: "#ffffff",
-          bars: "assets/logo-black.png", barsColor: "#ffffff", barsSize: 0.36 },
+          bars: "assets/logo.jpg", barsColor: "#ffffff", barsSize: 0.36 },
         { id: "blanco", name: "Blanco", color: "#ffffff" },
         { id: "negro",  name: "Negro",  color: "#000000" },
     ];

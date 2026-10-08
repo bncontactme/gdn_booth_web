@@ -38,7 +38,7 @@ if [ "${1:-}" = "--remove" ]; then
 fi
 
 mkdir -p "$DEST" "$APPS"
-install -m 755 "$HERE/start.sh" "$HERE/stop.sh" "$HERE/check.sh" "$HERE/lean-mode.sh" "$DEST/"
+install -m 755 "$HERE/start.sh" "$HERE/stop.sh" "$HERE/check.sh" "$HERE/lean-mode.sh" "$HERE/watchdog.py" "$DEST/"
 install -m 644 "$HERE/common.sh" "$DEST/"
 ICON="process-stop"
 if [ -f "$HERE/../assets/logo.jpg" ]; then

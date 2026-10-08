@@ -60,6 +60,9 @@ FLAGS=(
     --disable-extensions
     --disable-breakpad
     --no-pings
+    # Para que watchdog.py le pueda preguntar a la pagina si sigue viva.
+    # Solo escucha dentro del mismo Switch.
+    --remote-debugging-port="$DEBUG_PORT"
     --no-first-run
     --no-default-browser-check
     --check-for-update-interval=31536000
@@ -71,7 +74,16 @@ FLAGS=(
 )
 
 keep_awake
-trap 'allow_sleep; log "Booth apagado."' EXIT
+
+# Vigilante de la PAGINA (si se cae el navegador entero, de eso se encarga
+# el ciclo de abajo).
+rm -f "$RESTART_FLAG"
+WATCHDOG_PID=""
+if command -v python3 >/dev/null 2>&1; then
+    python3 "$HERE/watchdog.py" "$STATE_DIR" "$DEBUG_PORT" >>"$LOG_FILE" 2>&1 9>&- &
+    WATCHDOG_PID=$!
+fi
+trap '[ -n "$WATCHDOG_PID" ] && kill "$WATCHDOG_PID" 2>/dev/null; allow_sleep; log "Booth apagado."' EXIT
 
 log "Prendiendo el booth con $BROWSER: $BOOTH_URL"
 while :; do
@@ -84,6 +96,13 @@ while :; do
     code=$?
 
     [ -f "$STOP_FLAG" ] && break
+    if [ -f "$RESTART_FLAG" ]; then
+        # Lo cerro el vigilante porque la pagina no respondia.
+        rm -f "$RESTART_FLAG"
+        log "El vigilante cerro el navegador (pagina sin respuesta). Se vuelve a abrir."
+        sleep 2
+        continue
+    fi
     if [ "$code" -eq 0 ]; then
         # Codigo 0 = lo cerraron a proposito (Alt+F4). Si se cae, el codigo
         # es otro y se vuelve a abrir.

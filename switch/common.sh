@@ -13,6 +13,8 @@ BOOTH_URL="${BOOTH_URL:-https://bncontactme.github.io/gdn_booth_web/?kiosk&hand&
 
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/gdn-photobooth"
 STOP_FLAG="$STATE_DIR/stop"
+RESTART_FLAG="$STATE_DIR/restart"   # lo deja watchdog.py: "reabrelo"
+DEBUG_PORT=9222                     # depuracion de Chromium, solo local
 LOCK_FILE="$STATE_DIR/lock"
 LOG_FILE="$STATE_DIR/booth.log"
 SCREEN_BACKUP="$STATE_DIR/screen-settings"

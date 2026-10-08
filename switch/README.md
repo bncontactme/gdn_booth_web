@@ -88,6 +88,11 @@ Para volver a como estaba: los mismos comandos con `true`.
 Mientras está prendido:
 
 - **Si el navegador se cae, se vuelve a abrir solo.**
+- **Si la página truena** (la pantalla de "Aw, Snap!") **o se congela**, un
+  vigilante (`watchdog.py`) lo nota en menos de un minuto y reinicia el
+  navegador solo.
+- Con `--autostart`, si el Switch se reinicia el booth se prende solo en
+  cuanto se entra al escritorio.
 - La pantalla no se apaga, no se bloquea y el Switch no se duerme.
 - Apretar el ícono otra vez no abre un segundo booth.
 - Dejar el botón apretado no cuenta como varias fotos.
@@ -122,6 +127,7 @@ Mientras está prendido:
 | `install.sh` | Instala los íconos (`--autostart`, `--remove`). |
 | `start.sh` | Ícono **Photo Booth**: abre Chromium en kiosco y lo reabre si se cae. |
 | `stop.sh` | Ícono **Detener Photo Booth**. |
+| `watchdog.py` | Lo arranca `start.sh`: si la página deja de responder, reinicia el navegador. |
 | `check.sh` | Revisa cámara, navegador, internet, radio y modo ligero. |
 | `lean-mode.sh` | Apaga lo que el booth no usa (`--undo` lo regresa). |
 | `common.sh` | Ajustes que comparten los demás (la dirección del booth, carpetas). |

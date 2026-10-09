@@ -32,11 +32,21 @@ const CFG = Object.assign({
     handAfterSeconds: 20,
     handImage: "assets/hand.png",
     layout: "",
+    camera: "1920x1080",
 }, window.BOOTH_CONFIG || {});
 
 // ?kiosk en la direccion prende el modo kiosco sin tocar booth-config.js
 // (asi lo abre el Switch; la misma pagina en una compu sigue normal).
 const KIOSK = CFG.kiosk || new URLSearchParams(location.search).has("kiosk");
+
+// Resolucion que se le pide a la camara (la mas cercana que tenga). Mas
+// alta = mas detalle en la foto, sobre todo en Story, que recorta una tira
+// angosta del centro. ?camera=2560x1440 la cambia desde la direccion.
+const CAMERA_SIZE = (() => {
+    const want = new URLSearchParams(location.search).get("camera") || CFG.camera || "";
+    const m = /^(\d{3,4})x(\d{3,4})$/.exec(want);
+    return m ? { w: +m[1], h: +m[2] } : { w: 1920, h: 1080 };
+})();
 
 const SCENES = (window.BOOTH_SCENES && window.BOOTH_SCENES.length)
     ? window.BOOTH_SCENES
@@ -162,8 +172,8 @@ async function initCamera() {
         currentStream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: "user",
-                width:  { ideal: 1920 },
-                height: { ideal: 1080 },
+                width:  { ideal: CAMERA_SIZE.w },
+                height: { ideal: CAMERA_SIZE.h },
             },
             audio: false,
         });

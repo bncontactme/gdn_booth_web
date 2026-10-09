@@ -180,15 +180,56 @@ async function initCamera() {
         video.srcObject = currentStream;
         cameraError = null;
 
-        const s = currentStream.getVideoTracks()[0].getSettings();
-        console.log(`[Camara] ${s.width}x${s.height} — ${currentStream.getVideoTracks()[0].label}`);
+        const track = currentStream.getVideoTracks()[0];
+        const s = track.getSettings();
+        console.log(`[Camara] ${s.width}x${s.height} — ${track.label}`);
+
+        // Si la camara se desconecta (un jalón al cable, el adaptador que se
+        // reinicia), se vuelve a buscar sola en cuanto regrese.
+        track.addEventListener("ended", () => {
+            console.warn("[Camara] Se desconecto; se buscara de nuevo.");
+            cameraError = "unknown";
+            checkHealth();
+            scheduleCameraRetry();
+        }, { once: true });
     } catch (err) {
         console.error("[Camara] Error:", err.name, err.message);
         cameraError = err.name === "NotAllowedError" ? "denied"
                     : err.name === "NotFoundError"   ? "notfound"
                     : "unknown";
+        // Que no se quede pegado el video viejo: sin camara, sin imagen.
+        video.srcObject = null;
+        scheduleCameraRetry();
     }
     checkHealth();
+}
+
+// ── La camara se recupera sola ──────────────────────────────────────────────
+// Mientras no haya camara funcionando se vuelve a intentar cada pocos
+// segundos, y de inmediato cuando el sistema avisa que se conecto algo.
+
+const CAMERA_RETRY_MS = 5000;
+let cameraRetryTimer = null;
+
+const cameraLive = () => {
+    const t = currentStream && currentStream.getVideoTracks()[0];
+    return Boolean(t && t.readyState === "live");
+};
+
+function scheduleCameraRetry(delay = CAMERA_RETRY_MS) {
+    clearTimeout(cameraRetryTimer);
+    cameraRetryTimer = setTimeout(async () => {
+        // Antes del PIN la camara no se prende; con camara viva no hay nada que hacer.
+        if (lockOverlay.classList.contains("show") || cameraLive()) return;
+        console.log("[Camara] Buscando la camara…");
+        await initCamera();   // si falla, ella misma programa otro intento
+    }, delay);
+}
+
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+    navigator.mediaDevices.addEventListener("devicechange", () => {
+        if (!cameraLive()) scheduleCameraRetry(1500);
+    });
 }
 
 // ── Escenas ─────────────────────────────────────────────────────────────────

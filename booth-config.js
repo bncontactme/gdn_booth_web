@@ -67,8 +67,9 @@ window.BOOTH_CONFIG = {
   // Segundos que se queda el codigo QR en pantalla.
   qrSeconds: 18,
 
-  // Calidad del JPEG (0.5 = mas ligero, 0.95 = mas nitido).
-  jpegQuality: 0.85,
+  // Calidad del JPEG (0.5 = mas ligero, 0.95 = mas nitido). En 0.85 se
+  // notaban cuadritos en las orillas del marco y en lo oscuro.
+  jpegQuality: 0.92,
 
   // Lado largo maximo de la foto en pixeles.
   maxLongEdge: 1920,

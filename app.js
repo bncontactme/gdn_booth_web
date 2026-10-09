@@ -60,8 +60,7 @@ const UPLOAD_TIMEOUT_MS = 20000;
 const FALLBACK_DISPLAY_MS = 20000;
 // Cuanto se espera a que la foto termine de subir antes de enseñar el QR de
 // todos modos. Con buen internet sube antes; con malo, el QR no se atora.
-// (Eran 6 s; en el evento se sentia lento con el WiFi flojo.)
-const QUICK_UPLOAD_MS = 3900;
+const QUICK_UPLOAD_MS = 6000;
 const CURSOR_IDLE_MS = 3000;
 
 const $ = (id) => document.getElementById(id);

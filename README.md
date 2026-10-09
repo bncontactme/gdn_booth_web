@@ -45,7 +45,7 @@ Cloudinary, así que el link empieza a funcionar en cuanto termina de subir.
 Si la subida tarda, abajo del QR se le avisa a la persona que lo intente
 de nuevo en unos minutos.
 
-La pantalla del QR se queda ~12 segundos (`qrSeconds`). Mientras se ve,
+La pantalla del QR se queda ~7 segundos (`qrSeconds`). Mientras se ve,
 apretar el botón **solo la cierra** (la foto se sigue subiendo atrás); la
 siguiente pulsación ya toma otra foto.
 

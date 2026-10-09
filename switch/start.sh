@@ -92,7 +92,10 @@ while :; do
 
     # 9>&- : el navegador no hereda el candado. Si lo heredara, un proceso
     # suyo que se quede colgado dejaria el booth "prendido" para siempre.
-    "$BROWSER" "${FLAGS[@]}" "$BOOTH_URL" >>"$LOG_FILE" 2>&1 9>&-
+    # Cada vez se vuelve a ver si hay tele conectada: si la hay, ahi va.
+    POS="$(window_flag)"
+    [ -n "$POS" ] && log "Pantalla externa: se abre ahi ($POS)."
+    "$BROWSER" "${FLAGS[@]}" ${POS:+"$POS"} "$BOOTH_URL" >>"$LOG_FILE" 2>&1 9>&-
     code=$?
 
     [ -f "$STOP_FLAG" ] && break

@@ -36,6 +36,20 @@ log() {
     printf '%s  %s\n' "$(date '+%F %T')" "$*" >>"$LOG_FILE"
 }
 
+# Si hay una pantalla externa (tele o proyector), el booth se abre ahi y no
+# en la pantallita del Switch (DSI). Da la bandera de Chromium para ponerlo
+# en esa pantalla, o nada si solo esta la del Switch.
+window_flag() {
+    command -v xrandr >/dev/null 2>&1 || return 0
+    local geo xy
+    geo="$(xrandr --query 2>/dev/null | awk '$2 == "connected" && $1 !~ /^DSI/ {
+        for (i = 3; i <= NF; i++) if ($i ~ /^[0-9]+x[0-9]+\+[0-9]+\+[0-9]+$/) { print $i; exit }
+    }')"
+    [ -n "$geo" ] || return 0
+    xy="${geo#*+}"                       # 1024x768+1280+0 -> 1280+0
+    printf -- '--window-position=%s,%s\n' "${xy%%+*}" "${xy#*+}"
+}
+
 notify() {
     command -v notify-send >/dev/null 2>&1 && notify-send "Photo Booth" "$1" 2>/dev/null
     return 0

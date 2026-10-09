@@ -156,7 +156,19 @@ async function queueCount() {
 
 // ── Camara ──────────────────────────────────────────────────────────────────
 
+let cameraStarting = false;   // un arranque a la vez: dos se pelean la camara
+
 async function initCamera() {
+    if (cameraStarting) return;
+    cameraStarting = true;
+    try {
+        await startCamera();
+    } finally {
+        cameraStarting = false;
+    }
+}
+
+async function startCamera() {
     if (currentStream) {
         currentStream.getTracks().forEach(t => t.stop());
         currentStream = null;
@@ -231,6 +243,13 @@ if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
         if (!cameraLive()) scheduleCameraRetry(1500);
     });
 }
+
+// Y por si el aviso nunca llega: cada 5 s se revisa que siga viva.
+setInterval(() => {
+    if (!lockOverlay.classList.contains("show") && !cameraStarting && !cameraLive()) {
+        scheduleCameraRetry(0);
+    }
+}, CAMERA_RETRY_MS);
 
 // ── Escenas ─────────────────────────────────────────────────────────────────
 

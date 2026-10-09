@@ -121,7 +121,45 @@ def ws_evaluate(ws_url, expression, timeout=8):
 PROBE = ("(() => { const v = document.getElementById('video');"
          " const t = v && v.srcObject && v.srcObject.getVideoTracks()[0];"
          " const q = v && v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality().totalVideoFrames : -1;"
-         " return [document.readyState, t ? t.readyState : 'none', q]; })()")
+         " const lock = document.getElementById('lock-overlay');"
+         " const locked = Boolean(lock && lock.classList.contains('show'));"
+         " return [document.readyState, t ? t.readyState : 'none', q, locked]; })()")
+
+
+def os_has_camera():
+    """El Switch ve una camara conectada (aunque la pagina no la tenga)."""
+    return any(name.startswith("video") for name in os.listdir("/dev"))
+
+
+def booth_on_wrong_screen():
+    """Hay tele conectada y el booth NO esta en ella (p. ej. se reinicio
+    mientras la tele estaba desconectada). None si no se puede saber."""
+    try:
+        out = subprocess.run(["xrandr", "--query"], capture_output=True, text=True, timeout=5).stdout
+        ext_x = None
+        for line in out.splitlines():
+            parts = line.split()
+            if len(parts) > 2 and parts[1] == "connected" and not parts[0].startswith("DSI"):
+                for p in parts[2:]:
+                    if "+" in p and "x" in p.split("+")[0]:
+                        ext_x = int(p.split("+")[1])
+                        break
+        if ext_x is None:
+            return None   # solo la pantalla del Switch: no hay a donde moverlo
+        clients = subprocess.run(["xprop", "-root", "_NET_CLIENT_LIST"], capture_output=True,
+                                 text=True, timeout=5).stdout
+        for wid in [w.strip(",") for w in clients.split() if w.startswith("0x")]:
+            cls = subprocess.run(["xprop", "-id", wid, "WM_CLASS"], capture_output=True,
+                                 text=True, timeout=5).stdout
+            if "gdn-photobooth" not in cls:
+                continue
+            info = subprocess.run(["xwininfo", "-id", wid], capture_output=True, text=True, timeout=5).stdout
+            for line in info.splitlines():
+                if "Absolute upper-left X:" in line:
+                    return int(line.split(":")[1]) < ext_x
+        return None
+    except Exception:
+        return None
 
 
 def page_alive():
@@ -133,10 +171,10 @@ def page_alive():
         res = ws_evaluate(ws, PROBE)
         value = (((res or {}).get("result") or {}).get("result") or {}).get("value")
         if isinstance(value, list) and value[0] in ("interactive", "complete"):
-            return True, value[0], value[1], value[2]
-        return False, "la pagina no contesto", None, None
+            return True, value[0], value[1], value[2], value[3]
+        return False, "la pagina no contesto", None, None, None
     except Exception as e:   # sin puerto, sin navegador, tiempo agotado...
-        return False, type(e).__name__, None, None
+        return False, type(e).__name__, None, None, None
 
 
 def browser_main_pids():
@@ -188,10 +226,11 @@ def restart_browser(reason):
 def main():
     log(f"vigilando la pagina y la camara (cada {EVERY}s, puerto {PORT})")
     time.sleep(GRACE)
-    strikes = cam_strikes = 0
+    strikes = cam_strikes = screen_strikes = 0
     last_frames = None
+    no_camera_logged = False
     while not os.path.exists(STOP_FLAG):
-        ok, why, cam, frames = page_alive()
+        ok, why, cam, frames, locked = page_alive()
         bad = None
         if not ok:
             strikes += 1
@@ -200,14 +239,24 @@ def main():
                 bad = why
         else:
             strikes = 0
-            # La camara: desconectada, o "viva" pero sin cuadros nuevos. Si
-            # aun no arranca (pantalla del PIN) no se juzga.
+            # La camara. Solo se reinicia si el Switch SI ve una camara: si
+            # esta desconectada de verdad, reiniciar no sirve (la pagina la
+            # vuelve a agarrar sola en cuanto la conecten).
             problem = None
-            if cam == "ended":
-                problem = "la camara se desconecto"
-            elif cam == "live" and frames is not None and frames == last_frames:
+            plugged = os_has_camera()
+            if cam == "live" and frames is not None and frames == last_frames:
                 problem = "la camara se congelo"
+            elif cam == "ended" and plugged:
+                problem = "la camara se desconecto y ya volvio, pero la pagina no la tiene"
+            elif cam == "none" and not locked and plugged:
+                problem = "hay camara conectada pero la pagina no la esta usando"
             last_frames = frames if cam == "live" else None
+            if cam != "live" and not plugged and not locked:
+                if not no_camera_logged:
+                    log("no hay camara conectada (se toma sola cuando la conecten)")
+                    no_camera_logged = True
+            else:
+                no_camera_logged = False
             if problem:
                 cam_strikes += 1
                 log(f"{problem} {cam_strikes}/{CAM_STRIKES}")
@@ -215,9 +264,20 @@ def main():
                     bad = problem
             else:
                 cam_strikes = 0
+
+            # La tele: si esta conectada y el booth quedo en la pantallita del
+            # Switch, se reinicia para que abra en la tele.
+            if not bad:
+                if booth_on_wrong_screen():
+                    screen_strikes += 1
+                    log(f"el booth no esta en la tele {screen_strikes}/{STRIKES}")
+                    if screen_strikes >= STRIKES:
+                        bad = "el booth no estaba en la tele"
+                else:
+                    screen_strikes = 0
         if bad:
             restart_browser(bad)
-            strikes = cam_strikes = 0
+            strikes = cam_strikes = screen_strikes = 0
             last_frames = None
             time.sleep(GRACE)
             continue

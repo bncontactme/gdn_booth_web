@@ -6,10 +6,11 @@
 # La pagina del booth. ?kiosk esconde el boton del editor y el cursor;
 # &hand saca la mano que señala la esquina del boton cuando nadie lo usa;
 # &layout= elige el marco de assets/layouts/ que va encima de la foto;
-# &bg= el fondo de los lados (gdn-blanco: blanco con el logo chiquito).
+# &bg= el fondo de los lados (gdn-blanco: blanco con el logo chiquito);
+# &camera= la resolucion que se le pide a la webcam (la de este evento da 1440p).
 # La firma de Cloudinary solo acepta este dominio, asi que no la cambies por
 # una copia local: las fotos no subirian.
-BOOTH_URL="${BOOTH_URL:-https://bncontactme.github.io/gdn_booth_web/?kiosk&hand&layout=cigarro-manzana&bg=gdn-blanco}"
+BOOTH_URL="${BOOTH_URL:-https://bncontactme.github.io/gdn_booth_web/?kiosk&hand&layout=cigarro-manzana&bg=gdn-blanco&camera=2560x1440}"
 
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/gdn-photobooth"
 STOP_FLAG="$STATE_DIR/stop"

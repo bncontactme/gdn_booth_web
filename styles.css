@@ -447,6 +447,11 @@ html, body {
     color: #202020;
 }
 .result-timer { width: 100%; --seg: 10px; }
+#result-close {
+    font-size: clamp(11px, 1.6vh, 17px);
+    color: #404040;
+    margin-top: -0.6vh;
+}
 
 /* Pantalla vertical (tele girada): una ventana arriba de la otra. */
 @media (orientation: portrait) {

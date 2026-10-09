@@ -45,8 +45,9 @@ Cloudinary, así que el link empieza a funcionar en cuanto termina de subir.
 Si la subida tarda, abajo del QR se le avisa a la persona que lo intente
 de nuevo en unos minutos.
 
-Mientras se ve el QR, el botón no hace nada: aunque alguien lo siga
-apretando, no le quita el QR a quien lo está escaneando.
+El QR sale en máximo ~4 segundos. Mientras se ve, apretar el botón **solo
+cierra** esa pantalla (la foto se sigue subiendo atrás); la siguiente
+pulsación ya toma otra foto.
 
 **Importante:** no cierres la pestaña hasta que F1 diga
 `Fotos sin subir: 0`.

@@ -60,7 +60,8 @@ const UPLOAD_TIMEOUT_MS = 20000;
 const FALLBACK_DISPLAY_MS = 20000;
 // Cuanto se espera a que la foto termine de subir antes de enseñar el QR de
 // todos modos. Con buen internet sube antes; con malo, el QR no se atora.
-const QUICK_UPLOAD_MS = 6000;
+// (Eran 6 s; en el evento se sentia lento con el WiFi flojo.)
+const QUICK_UPLOAD_MS = 3900;
 const CURSOR_IDLE_MS = 3000;
 
 const $ = (id) => document.getElementById(id);
@@ -829,9 +830,18 @@ document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
 
-    // Mientras se guarda la foto o esta el QR en pantalla, el boton no hace
-    // nada: si alguien lo sigue apretando no le quita el QR a quien lo esta
-    // escaneando. Durante la cuenta regresiva si cuenta (para el combo).
+    // Con la foto y su QR en pantalla, el boton SOLO cierra esa pantalla
+    // (la foto se sigue subiendo atras). La siguiente pulsacion ya toma otra
+    // foto. Esta pulsacion no cuenta para el combo de 5.
+    if (qrOverlay.classList.contains("show")) {
+        enterCount = 0;
+        clearTimeout(enterTimer);
+        resetBooth();
+        return;
+    }
+
+    // Mientras se guarda la foto el boton no hace nada. Durante la cuenta
+    // regresiva si cuenta (para el combo).
     if (busy && !counting) return;
 
     // 5 Enter rapidos = cambiar de escena

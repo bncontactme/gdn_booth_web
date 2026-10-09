@@ -8,6 +8,9 @@
 #  cada 20 s si esta viva (por el puerto de depuracion de Chromium, que solo
 #  escucha en el mismo Switch). Si no contesta dos veces seguidas, deja una
 #  marca para start.sh y cierra el navegador: start.sh lo abre de nuevo.
+#  Tambien revisa la camara: si se desconecta o se congela (deja de llegar
+#  video) por cerca de un minuto, igual reinicia: al abrir de nuevo, el
+#  navegador vuelve a agarrar la camara.
 #
 #  Lo arranca start.sh; no se corre a mano.
 #      watchdog.py <carpeta de estado> <puerto>
@@ -30,6 +33,7 @@ RESTART_FLAG = os.path.join(STATE_DIR, "restart")
 GRACE = 60      # al arrancar: tiempo para que la pagina cargue
 EVERY = 20      # cada cuanto se pregunta
 STRIKES = 2     # cuantas fallas seguidas antes de reiniciar
+CAM_STRIKES = 3 # camara muerta o congelada: ~1 minuto antes de reiniciar
 
 
 def log(msg):
@@ -111,18 +115,28 @@ def ws_evaluate(ws_url, expression, timeout=8):
         s.close()
 
 
+# Lo que se le pregunta a la pagina: si cargo, como esta la camara ("live",
+# "ended" si se desconecto, "none" si aun no arranca: pantalla del PIN) y
+# cuantos cuadros de video lleva mostrados (si no sube, se congelo).
+PROBE = ("(() => { const v = document.getElementById('video');"
+         " const t = v && v.srcObject && v.srcObject.getVideoTracks()[0];"
+         " const q = v && v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality().totalVideoFrames : -1;"
+         " return [document.readyState, t ? t.readyState : 'none', q]; })()")
+
+
 def page_alive():
+    """(viva, por que, estado de la camara, cuadros mostrados)"""
     try:
         ws = booth_page()
         if not ws:
             return False, "no esta la pestaña del booth"
-        res = ws_evaluate(ws, "document.readyState")
+        res = ws_evaluate(ws, PROBE)
         value = (((res or {}).get("result") or {}).get("result") or {}).get("value")
-        if value in ("interactive", "complete"):
-            return True, value
-        return False, "la pagina no contesto"
+        if isinstance(value, list) and value[0] in ("interactive", "complete"):
+            return True, value[0], value[1], value[2]
+        return False, "la pagina no contesto", None, None
     except Exception as e:   # sin puerto, sin navegador, tiempo agotado...
-        return False, type(e).__name__
+        return False, type(e).__name__, None, None
 
 
 def browser_main_pids():
@@ -149,7 +163,7 @@ def alive(pid):
 
 
 def restart_browser(reason):
-    log(f"La pagina no responde ({reason}). Se reinicia el navegador.")
+    log(f"Algo fallo ({reason}). Se reinicia el navegador.")
     open(RESTART_FLAG, "w").close()
     pids = browser_main_pids()
     for pid in pids:
@@ -172,21 +186,41 @@ def restart_browser(reason):
 
 
 def main():
-    log(f"vigilando la pagina (cada {EVERY}s, puerto {PORT})")
+    log(f"vigilando la pagina y la camara (cada {EVERY}s, puerto {PORT})")
     time.sleep(GRACE)
-    strikes = 0
+    strikes = cam_strikes = 0
+    last_frames = None
     while not os.path.exists(STOP_FLAG):
-        ok, why = page_alive()
-        if ok:
-            strikes = 0
-        else:
+        ok, why, cam, frames = page_alive()
+        bad = None
+        if not ok:
             strikes += 1
             log(f"sin respuesta {strikes}/{STRIKES}: {why}")
             if strikes >= STRIKES:
-                restart_browser(why)
-                strikes = 0
-                time.sleep(GRACE)
-                continue
+                bad = why
+        else:
+            strikes = 0
+            # La camara: desconectada, o "viva" pero sin cuadros nuevos. Si
+            # aun no arranca (pantalla del PIN) no se juzga.
+            problem = None
+            if cam == "ended":
+                problem = "la camara se desconecto"
+            elif cam == "live" and frames is not None and frames == last_frames:
+                problem = "la camara se congelo"
+            last_frames = frames if cam == "live" else None
+            if problem:
+                cam_strikes += 1
+                log(f"{problem} {cam_strikes}/{CAM_STRIKES}")
+                if cam_strikes >= CAM_STRIKES:
+                    bad = problem
+            else:
+                cam_strikes = 0
+        if bad:
+            restart_browser(bad)
+            strikes = cam_strikes = 0
+            last_frames = None
+            time.sleep(GRACE)
+            continue
         time.sleep(EVERY)
 
 

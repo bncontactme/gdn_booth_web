@@ -102,7 +102,7 @@ while :; do
     if [ -f "$RESTART_FLAG" ]; then
         # Lo cerro el vigilante porque la pagina no respondia.
         rm -f "$RESTART_FLAG"
-        log "El vigilante cerro el navegador (pagina sin respuesta). Se vuelve a abrir."
+        log "El vigilante cerro el navegador (el motivo esta arriba). Se vuelve a abrir."
         sleep 2
         continue
     fi

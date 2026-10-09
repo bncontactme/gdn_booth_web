@@ -26,11 +26,12 @@ UNITS=(
     # sigue prendiendo a mano cuando se necesite.
     docker.service docker.socket containerd.service
     cloudflared.service tunnel-watchdog.service radio-boot.service
-    # Impresoras, modem, Bluetooth y Joy-Con, reportes de fallas, mDNS
+    # Impresoras, modem, Bluetooth y Joy-Con, reportes de fallas.
+    # (avahi se queda: con el se encuentra el Switch como xxsw1tchxx.local
+    # cuando cambia de red.)
     cups.service cups.socket cups.path cups-browsed.service
     ModemManager.service bluetooth.service joycond.service
     apport.service kerneloops.service
-    avahi-daemon.service avahi-daemon.socket
     # Actualizaciones y tareas en segundo plano. OJO: esto incluye las
     # actualizaciones automaticas de seguridad; despues del evento corre
     # --undo (o actualiza a mano de vez en cuando).

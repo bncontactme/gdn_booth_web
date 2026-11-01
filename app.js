@@ -17,6 +17,7 @@ const CFG = Object.assign({
     folder: "gdn_booth",
     countdownSeconds: 3,
     qrSeconds: 18,
+    qrShowPhoto: true,
     jpegQuality: 0.85,
     maxLongEdge: 1920,
     mirror: true,
@@ -653,6 +654,9 @@ async function showResult(blob, { url = "", ready = false, message = "" } = {}) 
     }
 
     const ms = hasQr ? CFG.qrSeconds * 1000 : FALLBACK_DISPLAY_MS;
+    // qrShowPhoto: false = solo el QR, sin la foto a un lado (la foto se
+    // sigue armando y subiendo igual; solo no se muestra aqui).
+    qrOverlay.classList.toggle("qr-only", CFG.qrShowPhoto === false);
     show(qrOverlay);
     runBar(resultBar, "drain", ms);
 

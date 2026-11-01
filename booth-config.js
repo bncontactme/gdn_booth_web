@@ -62,11 +62,15 @@ window.BOOTH_CONFIG = {
   folder: "gdn_booth",
 
   // Segundos de cuenta regresiva antes de la foto.
-  countdownSeconds: 3,
+  countdownSeconds: 5,
 
   // Segundos que se queda el codigo QR en pantalla (eran 18; corto para que
   // la fila avance). Con el boton se cierra antes.
   qrSeconds: 7,
+
+  // Pantalla del QR: en false sale SOLO el codigo QR, sin la foto a un lado.
+  // La foto se sube igual. Ponlo en true para volver a mostrarla.
+  qrShowPhoto: false,
 
   // Calidad del JPEG (0.5 = mas ligero, 0.95 = mas nitido). En 0.85 se
   // notaban cuadritos en las orillas del marco y en lo oscuro.

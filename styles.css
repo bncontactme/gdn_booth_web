@@ -417,6 +417,9 @@ html, body {
     max-width: 44vw;
 }
 .result-side { width: min(46vh, 42vw); }
+/* Solo QR (qrShowPhoto: false): sin la foto, el QR crece para leerse mejor. */
+#qr-overlay.qr-only .result-photo { display: none; }
+#qr-overlay.qr-only .result-side { width: min(62vh, 80vw); }
 .result-body {
     padding: clamp(12px, 2.2vh, 26px);
     display: flex;
